@@ -12,10 +12,10 @@
 #include <QButtonGroup>
 #include <QRadioButton>
 
-
 #include <math.h>
 #include <iostream>
 #include <fstream>
+
 
 class InputDataWindow: public QWidget{
     Q_OBJECT
@@ -38,10 +38,15 @@ public:
     QVBoxLayout *inputDatalayout;
 
     QPushButton *inputData_lidar1;
+    QLabel *inputData_lidar1path;
+    QLabel *inputData_lidar1path_now;
     QPushButton *inputData_lidar2;
+    QLabel *inputData_lidar2path;
+    QLabel *inputData_lidar2path_now;
     QPushButton *initial_extrinsic;
     QPushButton *draw_data;
     QPushButton *clear_data;
+    QPushButton *write_calibfile;
 
 signals:
     void SendData_lidar1(std::vector<float>);
@@ -57,6 +62,7 @@ private slots:
     void InitialExtrinsic();
     void DrawData();
     void ClearData();
+    void WriteCalibFile();
     void EnableButton();
 
 };

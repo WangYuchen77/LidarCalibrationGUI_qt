@@ -2,13 +2,23 @@
 // InputDataWindow构造函数
 InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
     inputData_lidar1 = new QPushButton(tr("加载雷达1数据"),this);
+    inputData_lidar1path = new QLabel(tr("雷达1文件路径: "),this);
+    inputData_lidar1path_now = new QLabel(tr("无文件"),this);
+    inputData_lidar1path_now->setFrameStyle(QFrame::Panel|QFrame::Sunken);
     inputData_lidar2 = new QPushButton(tr("加载雷达2数据"),this);
+    inputData_lidar2path = new QLabel(tr("雷达2文件路径: "),this);
+    inputData_lidar2path_now = new QLabel(tr("无文件"),this);
+    inputData_lidar2path_now->setFrameStyle(QFrame::Panel|QFrame::Sunken);
     initial_extrinsic = new QPushButton(tr("设置默认外参数"),this);
     draw_data = new QPushButton(tr("画图 / 图片复位"),this);
     clear_data = new QPushButton(tr("清除数据及图像"),this);
+    write_calibfile = new QPushButton(tr("输出外参标定结果"),this);
+    inputData_lidar2path_now->setEnabled(false);
+    inputData_lidar1path_now->setEnabled(false);
     initial_extrinsic->setEnabled(false);
     draw_data->setEnabled(false);
     clear_data->setEnabled(false);
+    write_calibfile->setEnabled(false);
 
     // 是否加载了雷达1和雷达2
     have_lidar1 = false;
@@ -16,29 +26,42 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
 
     // 主布局
     QVBoxLayout *inputDatalayout = new QVBoxLayout(this);
-    inputDatalayout->addWidget(inputData_lidar1,0,0);
-    inputDatalayout->addWidget(inputData_lidar2,1,0);
-    inputDatalayout->addWidget(initial_extrinsic,2,0);
-    inputDatalayout->addWidget(draw_data,3,0);
-    inputDatalayout->addWidget(clear_data,4,0);
+    inputDatalayout->addWidget(inputData_lidar1);
+    inputDatalayout->addWidget(inputData_lidar2);
+    inputDatalayout->addWidget(initial_extrinsic);
+    inputDatalayout->addWidget(draw_data);
+    inputDatalayout->addWidget(clear_data);
+    inputDatalayout->addWidget(write_calibfile);
+    QGridLayout *pathlayout = new QGridLayout(this);
+    pathlayout->addWidget(inputData_lidar1path,0,0);
+    pathlayout->addWidget(inputData_lidar1path_now,0,1);
+    pathlayout->addWidget(inputData_lidar2path,1,0);
+    pathlayout->addWidget(inputData_lidar2path_now,1,1);
+    inputDatalayout->addLayout(pathlayout);
+
 
     connect(inputData_lidar1 , SIGNAL(clicked()) , this , SLOT(InputDataLidar1()) );
     connect(inputData_lidar2 , SIGNAL(clicked()) , this , SLOT(InputDataLidar2()) );
     connect(initial_extrinsic , SIGNAL(clicked()), this , SLOT(InitialExtrinsic()) );
     connect(draw_data, SIGNAL(clicked()) , this , SLOT(DrawData()) );
     connect(clear_data, SIGNAL(clicked()) , this , SLOT(ClearData()) );
+    connect(write_calibfile, SIGNAL(clicked()) , this , SLOT(WriteCalibFile()) );
     connect(this, SIGNAL(command_enablebutton()) , this , SLOT(EnableButton()) );
 }
 void InputDataWindow::InputDataLidar1(){
     // 按钮加载
-//    QString path1 = QFileDialog::getOpenFileName(this,"open","../chen/matlab_try","TXT(*.txt)");
+//    QString path1 = QFileDialog::getOpenFileName(this,"open","../","TXT(*.txt)");
 //    std::string file1 = path1.toStdString();
 //    std::ifstream myfile_1(file1);
+//    inputData_lidar1path_now->setEnabled(true);
+//    inputData_lidar1path_now->setText(path1.right(20));
 
     // 固定路径
     std::ifstream myfile_1((getenv("HOME") +path_lidar1).c_str());
+    inputData_lidar1path_now->setEnabled(true);
+    inputData_lidar1path_now->setText("lidar1.txt");
 
-\
+
     for(int i=0;i<1080;i++)
     {
         myfile_1>>lidar1_angle[i]>>lidar1_range[i];
@@ -57,11 +80,15 @@ void InputDataWindow::InputDataLidar1(){
     }
 }
 void InputDataWindow::InputDataLidar2(){
-//    QString path2 = QFileDialog::getOpenFileName(this,"open","../chen/matlab_try","TXT(*.txt)");
+//    QString path2 = QFileDialog::getOpenFileName(this,"open","../","TXT(*.txt)");
 //    std::string file2 = path2.toStdString();
 //    std::ifstream myfile_2(file2);
+//    inputData_lidar2path_now->setEnabled(true);
+//    inputData_lidar2path_now->setText(path2.right(20));
 
     std::ifstream myfile_2((getenv("HOME") +path_lidar2).c_str());
+    inputData_lidar2path_now->setEnabled(true);
+    inputData_lidar2path_now->setText("lidar2.txt");
 
     for(int i=0;i<1080;i++)
     {
@@ -96,9 +123,15 @@ void InputDataWindow::ClearData(){
     initial_extrinsic->setEnabled(false);
     draw_data->setEnabled(false);
     clear_data->setEnabled(false);
+    inputData_lidar1path_now->setEnabled(false);
+    inputData_lidar2path_now->setEnabled(false);
 
     emit(command_clear());
 }
+void InputDataWindow::WriteCalibFile(){
+
+}
+
 void InputDataWindow::EnableButton(){
     initial_extrinsic->setEnabled(true);
     draw_data->setEnabled(true);
