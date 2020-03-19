@@ -26,11 +26,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 TEMPLATE = app
 #CONFIG += console c++11
 CONFIG -= app_bundle
-INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/opencv4/opencv2/
-INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/
-INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/opencv4/
-LIBS += -L/usr/local/Cellar/opencv/4.1.2/lib/ -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs
+# Mac
+#INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/opencv4/opencv2/
+#INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/
+#INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/opencv4/
+#LIBS += -L/usr/local/Cellar/opencv/4.1.2/lib/ -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs
+# Ubuntu
+INCLUDEPATH += /usr/local/opencv/
+INCLUDEPATH += /usr/local/opencv/include
 
+LIBS += -L/usr/local/lib/ -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs
 
 SOURCES += \
         main.cpp \

@@ -37,8 +37,8 @@ void InputDataWindow::InputDataLidar1(){
 
     // 固定路径
     std::ifstream myfile_1((getenv("HOME") +path_lidar1).c_str());
+    std::cout<<getenv("HOME")<<std::endl;
 
-\
     for(int i=0;i<1080;i++)
     {
         myfile_1>>lidar1_angle[i]>>lidar1_range[i];
