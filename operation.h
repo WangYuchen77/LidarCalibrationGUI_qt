@@ -11,16 +11,30 @@
 #include <QInputDialog>
 #include <QButtonGroup>
 #include <QRadioButton>
-
+#include <QTimer>
 
 #include <math.h>
 #include <iostream>
 #include <fstream>
 
+#include "include/dds_participant.h"
+#include "include/dds_publisher.h"
+#include "include/dds_subscriber.h"
+#include "include/LaserScan.h"
+#include "include/LaserScanPubSubTypes.h"
+
+
+
 class InputDataWindow: public QWidget{
     Q_OBJECT
 public:
     InputDataWindow(QWidget *parent= 0);
+
+    cmdrDDS::DdsParticipant mParticipant;
+    cmdrDDS::DdsSubscriber<commander_robot_msg::LaserScan, commander_robot_msg::LaserScanPubSubType> subscriber_lidar1;
+    cmdrDDS::DdsSubscriber<commander_robot_msg::LaserScan, commander_robot_msg::LaserScanPubSubType> subscriber_lidar2;
+    QTimer *tmr1;
+    QTimer *tmr2;
 
     double lidar1_angle[1080];
     double lidar1_range[1080];
@@ -35,13 +49,30 @@ public:
     std::string path_lidar1 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar1_data.txt";
     std::string path_lidar2 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar2_data.txt";
 
-    QVBoxLayout *inputDatalayout;
+    QHBoxLayout *sourcelayout;
+    QButtonGroup *data_source;
+    QRadioButton *data_online;
+    QRadioButton *data_offline;
 
+
+    QVBoxLayout *inputDatalayout;
     QPushButton *inputData_lidar1;
     QPushButton *inputData_lidar2;
     QPushButton *initial_extrinsic;
     QPushButton *draw_data;
     QPushButton *clear_data;
+    QPushButton *write_calibfile;
+
+    QGridLayout *pathlayout;
+    QLabel *inputData_lidar1path;
+    QLabel *inputData_lidar1path_now;
+    QLabel *inputData_lidar2path;
+    QLabel *inputData_lidar2path_now;
+
+    static void ReceiveMessage_fromlidar1(commander_robot_msg::LaserScan *message);
+    static void ReceiveMessage_fromlidar2(commander_robot_msg::LaserScan *message);
+
+
 
 signals:
     void SendData_lidar1(std::vector<float>);
@@ -52,11 +83,14 @@ signals:
     void command_enablebutton();
 
 private slots:
+    void UpdateLidar1();
+    void UpdateLidar2();
     void InputDataLidar1();
     void InputDataLidar2();
     void InitialExtrinsic();
     void DrawData();
     void ClearData();
+    void WriteCalibFile();
     void EnableButton();
 
 };

@@ -97,5 +97,5 @@ void DrawAxes::DrawLabel_X(std::string label_name, double min_value, double max_
 void DrawAxes::DrawTitle(std::string title_name, cv::Scalar title_color){
     putText(image_Axes, title_name,
             cv::Point(InsidePic_cols + image_noAxes.cols / 2 -200, InsidePic_rows - 20),
-            cv::FONT_HERSHEY_SIMPLEX, 3, title_color, 1, 8);
+            cv::FONT_HERSHEY_SIMPLEX, 1, title_color, 1, 8);
 }
