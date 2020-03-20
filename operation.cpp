@@ -64,7 +64,7 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
     connect(inputData_lidar1 , SIGNAL(clicked()) , this , SLOT(InputDataLidar1()) );
     connect(inputData_lidar2 , SIGNAL(clicked()) , this , SLOT(InputDataLidar2()) );
     connect(initial_extrinsic , SIGNAL(clicked()), this , SLOT(InitialExtrinsic()) );
-    connect(draw_data, SIGNAL(clicked()) , this , SLOT(DrawData()) );
+    connect(draw_data, SIGNAL(clicked()) , this , SLOT(DrawDataByButton()) );
     connect(clear_data, SIGNAL(clicked()) , this , SLOT(ClearData()) );
     connect(write_calibfile, SIGNAL(clicked()) , this , SLOT(WriteCalibFile()) );
     connect(this, SIGNAL(command_enablebutton()) , this , SLOT(EnableButton()) );
@@ -72,10 +72,10 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
 
     tmr1 = new QTimer(this);
     connect(tmr1, SIGNAL(timeout()), this, SLOT(UpdateLidar1()));
-    connect(tmr1, SIGNAL(timeout()), this, SLOT(DrawData()));
+    connect(tmr1, SIGNAL(timeout()), this, SLOT(DrawDataByTimer()));
     tmr2 = new QTimer(this);
     connect(tmr2, SIGNAL(timeout()), this, SLOT(UpdateLidar2()));
-    connect(tmr2, SIGNAL(timeout()), this, SLOT(DrawData()));
+    connect(tmr2, SIGNAL(timeout()), this, SLOT(DrawDataByTimer()));
 }
 void InputDataWindow::InputDataLidar1(){
     // 按钮加载
@@ -119,7 +119,7 @@ void InputDataWindow::InputDataLidar1(){
         range2.clear();
         SendData_lidar2(true, range2);
 
-        tmr1->start(50);
+        tmr1->start(100);
         emit SendStatus_lidar1(true);
 
         inputData_lidar1->setEnabled(false);
@@ -167,7 +167,7 @@ void InputDataWindow::InputDataLidar2(){
         range1.clear();
         SendData_lidar2(true, range1);
 
-        tmr2->start(50);
+        tmr2->start(100);
         emit SendStatus_lidar2(true);
 
         inputData_lidar2->setEnabled(false);
@@ -196,8 +196,11 @@ void InputDataWindow::UpdateLidar2(){
 void InputDataWindow::InitialExtrinsic(){
     emit(command_initialExtrinsic());
 }
-void InputDataWindow::DrawData(){
-    emit command_draw();
+void InputDataWindow::DrawDataByButton(){
+    emit command_draw_byButton();
+}
+void InputDataWindow::DrawDataByTimer(){
+    emit command_draw_byTimer();
 }
 void InputDataWindow::ClearData(){
     range1.clear();
@@ -491,21 +494,21 @@ void OperationWindow::DrawWhichLidar(){
     }
     command_record->moveCursor(QTextCursor::NextRow);
 
-    DrawData();
+    DrawData("Button");
 }
-void OperationWindow::TriggerDrawData(){
-    if ( drawButtonPushTimes != 0 ){
-        emit command_resetPicture();
-    }
-    DrawData();
-    drawButtonPushTimes++;
+// 画图按钮被触发
+void OperationWindow::DrawDataByButton(){
+    DrawData("Button");
 }
-void OperationWindow::DrawData(){
-    // if (!online){
-//        command_row++;
-//        command_record->insertPlainText(tr("画图\n"));
-//        command_record->moveCursor(QTextCursor::NextRow);
-    // }
+void OperationWindow::DrawDataByTimer(){
+    DrawData("Timer");
+}
+void OperationWindow::DrawData(std::string way){
+     if (way == "Button"){
+        command_row++;
+        command_record->insertPlainText(tr("画图\n"));
+        command_record->moveCursor(QTextCursor::NextRow);
+     }
 
     int draw_id = lidar_show->checkedId();
     double draw_increment1 = this->lidar1_increment_now->text().toDouble();
@@ -515,12 +518,14 @@ void OperationWindow::DrawData(){
     double draw_theta = this->extrinsic_theta_now->text().toDouble();
 
     if (draw_x!=0 && draw_y!= 0 && draw_theta!=0 && draw_increment1!= 0 && draw_increment2!=0 ){
-        emit command_draw(draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
+        emit command_draw(way, draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
     }
     else{
-        command_row++;
-        command_record->insertPlainText(tr("无法画图！输入外参不合法\n"));
-        command_record->moveCursor(QTextCursor::NextRow);
+        if (way == "Button"){
+            command_row++;
+            command_record->insertPlainText(tr("无法画图！输入外参不合法\n"));
+            command_record->moveCursor(QTextCursor::NextRow);
+        }
     }
 
 }

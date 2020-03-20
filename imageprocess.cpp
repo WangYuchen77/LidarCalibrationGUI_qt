@@ -80,7 +80,7 @@ void ShowResultWidget::ReceiveData_lidar2(bool online, std::vector<float> range2
     isDataOnline = online;
 }
 // 画图核心代码
-void ShowResultWidget::draw(double show_id, double increment1, double increment2, double angle, double extrin_x, double extrin_y){
+void ShowResultWidget::draw(std::string way, double show_id, double increment1, double increment2, double angle, double extrin_x, double extrin_y){
 //    std::cout<<increment1<<std::endl;
 //    std::cout<<increment2<<std::endl;
 //    std::cout<<angle<<std::endl;
@@ -219,7 +219,8 @@ void ShowResultWidget::draw(double show_id, double increment1, double increment2
 
     // 如果是自动更新的在线雷达数据，并且没有人按图片复位按钮(isRest == false)，并且图片已经被放大缩小或者移动了(isInitialPose == false)
     // 就不要更新图片（什么都不做）
-    if (isReset == false && isInitialPose == false){
+
+    if (way == "Timer" && isInitialPose == false){
     }
     else{
         mergePicture->setScaledContents(true);
@@ -241,7 +242,9 @@ void ShowResultWidget::draw(double show_id, double increment1, double increment2
     haveDraw = true;
 }
 void ShowResultWidget::PictureReset(){
+    std::cout<<"before:"<<isReset<<std::endl;
     isReset = true;
+    std::cout<<"after:"<<isReset<<std::endl;
     isInitialPose = true;
 }
 

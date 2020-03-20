@@ -83,7 +83,8 @@ signals:
     void SendStatus_lidar2(bool);
 
     void command_initialExtrinsic();
-    void command_draw();
+    void command_draw_byButton();
+    void command_draw_byTimer();
     void command_clear();
     void command_enablebutton();
 
@@ -93,7 +94,8 @@ private slots:
     void InputDataLidar1();
     void InputDataLidar2();
     void InitialExtrinsic();
-    void DrawData();
+    void DrawDataByButton();
+    void DrawDataByTimer();
     void ClearData();
     void WriteCalibFile();
     void EnableButton();
@@ -161,15 +163,16 @@ public:
     QPushButton *dtheta_subtract;
     QPushButton *dtheta_add;
 signals:
-    void command_draw(double, double, double, double, double, double);
+    void command_draw(std::string, double, double, double, double, double, double);
     void command_resetPicture();
 private slots:
 
     void ReceiveStatus_lidar1(bool);
     void ReceiveStatus_lidar2(bool);
     void InitialExtrinsic();
-    void DrawData();
-    void TriggerDrawData();
+    void DrawDataByButton();
+    void DrawDataByTimer();
+    void DrawData(std::string);
 
     void DrawWhichLidar();
 

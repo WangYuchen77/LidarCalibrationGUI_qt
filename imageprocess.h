@@ -90,7 +90,7 @@ private slots:
 
     void ReceiveData_lidar1(bool, std::vector<float> range1);
     void ReceiveData_lidar2(bool, std::vector<float> range2);
-    void draw(double, double, double, double, double, double);
+    void draw(std::string, double, double, double, double, double, double);
     void ClearImage();
     void PictureReset();
 
