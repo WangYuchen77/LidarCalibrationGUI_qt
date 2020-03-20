@@ -49,7 +49,7 @@ public:
     bool haveData1;
     bool haveData2;
     bool haveDraw;
-
+int time11 = 0;
     cv::Mat AddAxes(cv::Mat inputMat);
 
 private :
@@ -92,7 +92,6 @@ private slots:
     void ReceiveData_lidar2(bool, std::vector<float> range2);
     void draw(std::string, double, double, double, double, double, double);
     void ClearImage();
-    void PictureReset();
 
     void EnableButton();
     void DisableButton();

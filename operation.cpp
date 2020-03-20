@@ -502,12 +502,30 @@ void OperationWindow::DrawDataByButton(){
 void OperationWindow::DrawDataByTimer(){
     DrawData("Timer");
 }
+void OperationWindow::DrawData(){
+    int draw_id = lidar_show->checkedId();
+    double draw_increment1 = this->lidar1_increment_now->text().toDouble();
+    double draw_increment2 = this->lidar2_increment_now->text().toDouble();
+    double draw_x = this->extrinsic_x_now->text().toDouble();
+    double draw_y = this->extrinsic_y_now->text().toDouble();
+    double draw_theta = this->extrinsic_theta_now->text().toDouble();
+
+    if (draw_x!=0 && draw_y!= 0 && draw_theta!=0 && draw_increment1!= 0 && draw_increment2!=0 ){
+        emit command_draw("Button", draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
+    }
+    else{
+        command_row++;
+        command_record->insertPlainText(tr("无法画图！输入外参不合法\n"));
+        command_record->moveCursor(QTextCursor::NextRow);
+    }
+}
 void OperationWindow::DrawData(std::string way){
-     if (way == "Button"){
+    if (way == "Button"){
         command_row++;
         command_record->insertPlainText(tr("画图\n"));
         command_record->moveCursor(QTextCursor::NextRow);
-     }
+    }
+
 
     int draw_id = lidar_show->checkedId();
     double draw_increment1 = this->lidar1_increment_now->text().toDouble();
@@ -526,7 +544,6 @@ void OperationWindow::DrawData(std::string way){
             command_record->moveCursor(QTextCursor::NextRow);
         }
     }
-
 }
 void OperationWindow::InitialExtrinsic(){
     command_row++;
