@@ -46,10 +46,10 @@ public:
 
     bool have_lidar1;
     bool have_lidar2;
-    std::string path_lidar1 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar1_data.txt";
-    std::string path_lidar2 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar2_data.txt";
-//    std::string path_lidar1 = "/yuchen/LidarCalibrationGUI_qt/data/lidar1_data.txt";
-//    std::string path_lidar2 = "/yuchen/LidarCalibrationGUI_qt/data/lidar2_data.txt";
+    //std::string path_lidar1 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar1_data.txt";
+    //std::string path_lidar2 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar2_data.txt";
+    std::string path_lidar1 = "/yuchen/LidarCalibrationGUI_qt/data/lidar1_data.txt";
+    std::string path_lidar2 = "/yuchen/LidarCalibrationGUI_qt/data/lidar2_data.txt";
 
     QHBoxLayout *sourcelayout;
     QButtonGroup *data_source;
@@ -112,7 +112,6 @@ public:
     QTextBrowser *command_record;
     int command_row;
 
-    int drawButtonPushTimes;
 
     QButtonGroup *lidar_show;
     QRadioButton *lidarAll_show;

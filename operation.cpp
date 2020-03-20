@@ -119,7 +119,7 @@ void InputDataWindow::InputDataLidar1(){
         range2.clear();
         SendData_lidar2(true, range2);
 
-        tmr1->start(100);
+        tmr1->start(10);
         emit SendStatus_lidar1(true);
 
         inputData_lidar1->setEnabled(false);
@@ -167,7 +167,7 @@ void InputDataWindow::InputDataLidar2(){
         range1.clear();
         SendData_lidar2(true, range1);
 
-        tmr2->start(100);
+        tmr2->start(10);
         emit SendStatus_lidar2(true);
 
         inputData_lidar2->setEnabled(false);
@@ -241,7 +241,6 @@ OperationWindow::OperationWindow(QWidget *parent):QWidget(parent){
     command_record = new QTextBrowser(this);
     command_row = 0;
 
-    drawButtonPushTimes = 0;
 
     lidar_show = new QButtonGroup(this);
     lidarAll_show = new QRadioButton(tr("显示全部雷达数据"),this);
@@ -591,7 +590,6 @@ void OperationWindow::EnableButton(){
     dtheta_add->setEnabled(true);
 }
 void OperationWindow::DisableButton(){
-    drawButtonPushTimes = 0;
     if (command_row == 0){
         command_record->insertPlainText(tr("当前没有任何雷达数据，加载数据后才能操作\n"));
     }

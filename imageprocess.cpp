@@ -81,6 +81,7 @@ void ShowResultWidget::ReceiveData_lidar2(bool online, std::vector<float> range2
 }
 // 画图核心代码
 void ShowResultWidget::draw(std::string way, double show_id, double increment1, double increment2, double angle, double extrin_x, double extrin_y){
+    std::cout<<way<<std::endl;
 //    std::cout<<increment1<<std::endl;
 //    std::cout<<increment2<<std::endl;
 //    std::cout<<angle<<std::endl;
@@ -126,6 +127,7 @@ void ShowResultWidget::draw(std::string way, double show_id, double increment1, 
     yList_1.clear();
     xList_2.clear();
     yList_2.clear();
+
     std::vector<cv::Point2d> ptSet1_original;
     std::vector<cv::Point2d> ptSet2_original;
     for (int i = 0 ; i< pointCloudSize_lidar1; i++){
@@ -221,12 +223,13 @@ void ShowResultWidget::draw(std::string way, double show_id, double increment1, 
     // 就不要更新图片（什么都不做）
 
     if (way == "Timer" && isInitialPose == false){
+
     }
     else{
         mergePicture->setScaledContents(true);
         mergePicture->setPixmap(QPixmap::fromImage(img));
+        isInitialPose = true;
     }
-
 
 
 
