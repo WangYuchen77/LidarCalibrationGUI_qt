@@ -238,6 +238,8 @@ OperationWindow::OperationWindow(QWidget *parent):QWidget(parent){
     command_record = new QTextBrowser(this);
     command_row = 0;
 
+    drawButtonPushTimes = 0;
+
     lidar_show = new QButtonGroup(this);
     lidarAll_show = new QRadioButton(tr("显示全部雷达数据"),this);
     lidar1_show = new QRadioButton(tr("只显示雷达1"),this);
@@ -491,12 +493,18 @@ void OperationWindow::DrawWhichLidar(){
 
     DrawData();
 }
-
+void OperationWindow::TriggerDrawData(){
+    if ( drawButtonPushTimes != 0 ){
+        emit command_resetPicture();
+    }
+    DrawData();
+    drawButtonPushTimes++;
+}
 void OperationWindow::DrawData(){
     // if (!online){
-        command_row++;
-        command_record->insertPlainText(tr("画图\n"));
-        command_record->moveCursor(QTextCursor::NextRow);
+//        command_row++;
+//        command_record->insertPlainText(tr("画图\n"));
+//        command_record->moveCursor(QTextCursor::NextRow);
     // }
 
     int draw_id = lidar_show->checkedId();
@@ -514,6 +522,7 @@ void OperationWindow::DrawData(){
         command_record->insertPlainText(tr("无法画图！输入外参不合法\n"));
         command_record->moveCursor(QTextCursor::NextRow);
     }
+
 }
 void OperationWindow::InitialExtrinsic(){
     command_row++;
@@ -533,7 +542,7 @@ void OperationWindow::InitialExtrinsic(){
 void OperationWindow::ReceiveStatus_lidar1(bool online){
     command_row++;
     if (online){
-        command_record->insertPlainText(tr("雷达1\n"));
+        command_record->insertPlainText(tr("雷达1已连接\n"));
     }
     else{
         command_record->insertPlainText(tr("已加载雷达1的数据\n"));
@@ -543,7 +552,7 @@ void OperationWindow::ReceiveStatus_lidar1(bool online){
 void OperationWindow::ReceiveStatus_lidar2(bool online){
     command_row++;
     if (online){
-        command_record->insertPlainText(tr("雷达2\n"));
+        command_record->insertPlainText(tr("雷达2已连接\n"));
     }
     else{
         command_record->insertPlainText(tr("已加载雷达1的数据\n"));
@@ -577,6 +586,7 @@ void OperationWindow::EnableButton(){
     dtheta_add->setEnabled(true);
 }
 void OperationWindow::DisableButton(){
+    drawButtonPushTimes = 0;
     if (command_row == 0){
         command_record->insertPlainText(tr("当前没有任何雷达数据，加载数据后才能操作\n"));
     }
@@ -646,7 +656,7 @@ void OperationWindow::SetX(){
 }
 void OperationWindow::SubtractX(){
     command_row++;
-    command_record->insertPlainText(tr("X 方向减，"));
+    command_record->insertPlainText(tr("X 方向减\n"));
     command_record->moveCursor(QTextCursor::NextRow);
 
     double tmp = extrinsic_x_now->text().toDouble();
@@ -656,7 +666,7 @@ void OperationWindow::SubtractX(){
 }
 void OperationWindow::AddX(){
     command_row++;
-    command_record->insertPlainText(tr("X 方向加，"));
+    command_record->insertPlainText(tr("X 方向加\n"));
     command_record->moveCursor(QTextCursor::NextRow);
 
     double tmp = extrinsic_x_now->text().toDouble();
@@ -677,7 +687,7 @@ void OperationWindow::SetY(){
 }
 void OperationWindow::SubtractY(){
     command_row++;
-    command_record->insertPlainText(tr("Y 方向减，"));
+    command_record->insertPlainText(tr("Y 方向减\n"));
     command_record->moveCursor(QTextCursor::NextRow);
 
     double tmp = extrinsic_y_now->text().toDouble();
@@ -687,7 +697,7 @@ void OperationWindow::SubtractY(){
 }
 void OperationWindow::AddY(){
     command_row++;
-    command_record->insertPlainText(tr("Y 方向加，"));
+    command_record->insertPlainText(tr("Y 方向加\n"));
     command_record->moveCursor(QTextCursor::NextRow);
 
     double tmp = extrinsic_y_now->text().toDouble();
@@ -709,7 +719,7 @@ void OperationWindow::SetTheta(){
 }
 void OperationWindow::SubtractTheta(){
     command_row++;
-    command_record->insertPlainText(tr("Theta 角度减，"));
+    command_record->insertPlainText(tr("Theta 角度减\n"));
     command_record->moveCursor(QTextCursor::NextRow);
 
     double tmp = extrinsic_theta_now->text().toDouble();
@@ -719,7 +729,7 @@ void OperationWindow::SubtractTheta(){
 }
 void OperationWindow::AddTheta(){
     command_row++;
-    command_record->insertPlainText(tr("Theta 角度加，"));
+    command_record->insertPlainText(tr("Theta 角度加\n"));
     command_record->moveCursor(QTextCursor::NextRow);
 
     double tmp = extrinsic_theta_now->text().toDouble();

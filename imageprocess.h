@@ -75,7 +75,10 @@ private :
     QPushButton  *UpButton;
     QPushButton  *DownButton;
 
-    void AddComboItem(QComboBox* cmbo);
+    bool isInitialPose;
+    bool isDataOnline;
+    bool isReset;
+
 
     bool event(QEvent * event);
     void wheelEvent(QWheelEvent* e);     //鼠标滑轮事件
@@ -89,6 +92,7 @@ private slots:
     void ReceiveData_lidar2(bool, std::vector<float> range2);
     void draw(double, double, double, double, double, double);
     void ClearImage();
+    void PictureReset();
 
     void EnableButton();
     void DisableButton();

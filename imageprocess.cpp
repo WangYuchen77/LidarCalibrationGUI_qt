@@ -51,6 +51,8 @@ ShowResultWidget::ShowResultWidget(QWidget *parent):QWidget(parent){
     action = ShowResultWidget::None;
     pixW = 2200;            //设置图片尺寸为985*740
     pixH = 2200;
+    isInitialPose = true;
+    isReset = false;
 
     pix = new QPixmap;
 
@@ -68,12 +70,14 @@ ShowResultWidget::ShowResultWidget(QWidget *parent):QWidget(parent){
 // 接收雷达1数据
 void ShowResultWidget::ReceiveData_lidar1(bool online, std::vector<float> range1){
     this->range1 = range1;
-    haveData1 = true;
+    haveData1 = true;  
+    isDataOnline = online;
 }
 // 接收雷达2数据
 void ShowResultWidget::ReceiveData_lidar2(bool online, std::vector<float> range2){
     this->range2 = range2;
     haveData2 = true;
+    isDataOnline = online;
 }
 // 画图核心代码
 void ShowResultWidget::draw(double show_id, double increment1, double increment2, double angle, double extrin_x, double extrin_y){
@@ -208,8 +212,23 @@ void ShowResultWidget::draw(double show_id, double increment1, double increment2
     // 图片适应QLabel的大小，加了这句话雷达图像变模糊了,KeepAspectRatio改成了KeepAspectRatioByExpanding
     // img = img.scaled(mergePicture->size(), Qt::KeepAspectRatio);
 //    img = img.scaled(mergePicture->size(), Qt::KeepAspectRatioByExpanding);
-    mergePicture->setScaledContents(true);
-    mergePicture->setPixmap(QPixmap::fromImage(img));
+
+
+//    if (isInitialPose && !isDataOnline){
+//    if (!isDataOnline){
+
+    // 如果是自动更新的在线雷达数据，并且没有人按图片复位按钮(isRest == false)，并且图片已经被放大缩小或者移动了(isInitialPose == false)
+    // 就不要更新图片（什么都不做）
+    if (isReset == false && isInitialPose == false){
+    }
+    else{
+        mergePicture->setScaledContents(true);
+        mergePicture->setPixmap(QPixmap::fromImage(img));
+    }
+
+
+
+
 
     // 暂时不知道，为啥得把正常的BGR换到RGB，放大缩小那些功能才能显示正常颜色
     // 放大缩小的那些函数，是BGR->RGB->BGR
@@ -221,6 +240,11 @@ void ShowResultWidget::draw(double show_id, double increment1, double increment2
 
     haveDraw = true;
 }
+void ShowResultWidget::PictureReset(){
+    isReset = true;
+    isInitialPose = true;
+}
+
 //void ShowResultWidget::paintEvent(QPaintEvent *){
 
 //    QPainter painter(this);
@@ -284,7 +308,7 @@ bool ShowResultWidget::event(QEvent * event){
                 QApplication::setOverrideCursor(Qt::OpenHandCursor); //设置鼠标样式
                 PreDot = mouse->pos();
             }
-
+            isInitialPose = false;
         }
         else if(event->type() == QEvent::MouseButtonRelease){
             QMouseEvent *mouse = dynamic_cast<QMouseEvent* >(event);
@@ -293,6 +317,7 @@ bool ShowResultWidget::event(QEvent * event){
                 QApplication::setOverrideCursor(Qt::ArrowCursor); //改回鼠标样式
                 press=false;
             }
+            isInitialPose = false;
         }
         if(event->type() == QEvent::MouseMove){              //移动图片
             if(press){
@@ -304,6 +329,7 @@ bool ShowResultWidget::event(QEvent * event){
                 action = ShowResultWidget::Move;
                 this->update();
             }
+            isInitialPose = false;
         }
     }
     return QWidget::event(event);
@@ -314,10 +340,12 @@ void ShowResultWidget::wheelEvent(QWheelEvent* event)     //鼠标滑轮事件
     if (haveData1 == true && haveData2 == true && haveDraw == true){
         if (event->delta()>0){      //上滑,缩小
             action=ShowResultWidget::Shrink;
+            isInitialPose = false;
             this->update();
         }
         else{                    //下滑,放大
             action=ShowResultWidget::Amplification;
+            isInitialPose = false;
             this->update();
         }
         event->accept();
@@ -464,6 +492,7 @@ void ShowResultWidget::ClearImage(){
     haveData1 = false;
     haveData2 = false;
     haveDraw = false;
+    isInitialPose = true;
 }
 // 激活所有按钮
 void ShowResultWidget::EnableButton(){
@@ -488,16 +517,19 @@ void ShowResultWidget::DisableButton(){
 void  ShowResultWidget::onBigClicked()
 {
     action=ShowResultWidget::Amplification;
+    isInitialPose = false;
     this->update();
 }
 void  ShowResultWidget::onLittleClicked()
 {
     action=ShowResultWidget::Shrink;
+    isInitialPose = false;
     this->update();
 }
 void ShowResultWidget::onUpClicked()
 {
     action=ShowResultWidget::Move;
+    isInitialPose = false;
     offset.setX(0);
     offset.setY(20);
     this->update();
@@ -505,6 +537,7 @@ void ShowResultWidget::onUpClicked()
 void ShowResultWidget::onDownClicked()
 {
     action=ShowResultWidget::Move;
+    isInitialPose = false;
     offset.setX(0);
     offset.setY(-20);
     this->update();
@@ -512,6 +545,7 @@ void ShowResultWidget::onDownClicked()
 void ShowResultWidget::OnLeftClicked()
 {
     action=ShowResultWidget::Move;
+    isInitialPose = false;
     offset.setX(20);
     offset.setY(0);
     this->update();
@@ -519,6 +553,7 @@ void ShowResultWidget::OnLeftClicked()
 void ShowResultWidget::OnRightClicked()
 {
     action=ShowResultWidget::Move;
+    isInitialPose = false;
     offset.setX(-20) ;
     offset.setY(0) ;
     this->update();

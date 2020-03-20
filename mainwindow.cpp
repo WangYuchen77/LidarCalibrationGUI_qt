@@ -66,11 +66,10 @@ MainwindowWidget::MainwindowWidget(QWidget *parent):QWidget(parent){
                 operationW , SLOT(ReceiveStatus_lidar1(bool)) );
     connect(inputDataW, SIGNAL(SendStatus_lidar2(bool)),
                 operationW , SLOT(ReceiveStatus_lidar2(bool)) );
-
     // 外参初始化
     connect(inputDataW, SIGNAL(command_initialExtrinsic()), operationW , SLOT(InitialExtrinsic()) );
     // 画图命令
-    connect(inputDataW, SIGNAL(command_draw()), operationW , SLOT(DrawData()) );
+    connect(inputDataW, SIGNAL(command_draw()), operationW , SLOT(TriggerDrawData()) );
     // 清除数据后，把外参按钮失能
     connect(inputDataW, SIGNAL(command_clear()), operationW , SLOT(DisableButton()) );
     // 使能按钮
@@ -81,6 +80,7 @@ MainwindowWidget::MainwindowWidget(QWidget *parent):QWidget(parent){
     // 画图是由operationWindow向ShowResultWindow发出的命令
     connect(operationW, SIGNAL(command_draw(double, double, double, double, double, double)),
             showResultW , SLOT(draw(double, double, double, double, double, double)) );
+    connect(operationW, SIGNAL(command_resetPicture()), showResultW, SLOT(PictureReset()));
 
 }
 //void MainwindowWidget::wheelEvent(QWheelEvent *event)
