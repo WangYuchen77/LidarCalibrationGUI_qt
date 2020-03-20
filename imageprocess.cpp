@@ -66,12 +66,12 @@ ShowResultWidget::ShowResultWidget(QWidget *parent):QWidget(parent){
 
 }
 // 接收雷达1数据
-void ShowResultWidget::ReceiveData_lidar1(std::vector<float> range1){
+void ShowResultWidget::ReceiveData_lidar1(bool online, std::vector<float> range1){
     this->range1 = range1;
     haveData1 = true;
 }
 // 接收雷达2数据
-void ShowResultWidget::ReceiveData_lidar2(std::vector<float> range2){
+void ShowResultWidget::ReceiveData_lidar2(bool online, std::vector<float> range2){
     this->range2 = range2;
     haveData2 = true;
 }

@@ -46,8 +46,10 @@ public:
 
     bool have_lidar1;
     bool have_lidar2;
-    std::string path_lidar1 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar1_data.txt";
-    std::string path_lidar2 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar2_data.txt";
+    //std::string path_lidar1 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar1_data.txt";
+    //std::string path_lidar2 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar2_data.txt";
+    std::string path_lidar1 = "/yuchen/LidarCalibrationGUI_qt/data/lidar1_data.txt";
+    std::string path_lidar2 = "/yuchen/LidarCalibrationGUI_qt/data/lidar2_data.txt";
 
     QHBoxLayout *sourcelayout;
     QButtonGroup *data_source;
@@ -75,8 +77,11 @@ public:
 
 
 signals:
-    void SendData_lidar1(std::vector<float>);
-    void SendData_lidar2(std::vector<float>);
+    void SendData_lidar1(bool, std::vector<float>);
+    void SendData_lidar2(bool, std::vector<float>);
+    void SendStatus_lidar1(bool);
+    void SendStatus_lidar2(bool);
+
     void command_initialExtrinsic();
     void command_draw();
     void command_clear();
@@ -158,8 +163,8 @@ signals:
 
 private slots:
 
-    void ReceiveInput_lidar1();
-    void ReceiveInput_lidar2();
+    void ReceiveStatus_lidar1(bool);
+    void ReceiveStatus_lidar2(bool);
     void InitialExtrinsic();
     void DrawData();
 

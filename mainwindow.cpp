@@ -49,10 +49,10 @@ MainwindowWidget::MainwindowWidget(QWidget *parent):QWidget(parent){
     // InputDataWindow to ShowResultWidget
     // 传雷达点给图像窗口
     qRegisterMetaType<std::vector<float>>("inputdata");
-    connect(inputDataW, SIGNAL(SendData_lidar1(std::vector<float>)),
-            showResultW, SLOT(ReceiveData_lidar1(std::vector<float>)));
-    connect(inputDataW, SIGNAL(SendData_lidar2(std::vector<float>)),
-            showResultW, SLOT(ReceiveData_lidar2(std::vector<float>)));
+    connect(inputDataW, SIGNAL(SendData_lidar1(bool, std::vector<float>)),
+            showResultW, SLOT(ReceiveData_lidar1(bool, std::vector<float>)));
+    connect(inputDataW, SIGNAL(SendData_lidar2(bool, std::vector<float>)),
+            showResultW, SLOT(ReceiveData_lidar2(bool, std::vector<float>)));
     // 清除图像
     connect(inputDataW, SIGNAL(command_clear()), showResultW , SLOT(ClearImage()) );
     // 数据清除命令，画图按钮全部失能
@@ -62,10 +62,10 @@ MainwindowWidget::MainwindowWidget(QWidget *parent):QWidget(parent){
 
     // InputDataWindow to OperationWindow
     // 接受雷达数据
-    connect(inputDataW, SIGNAL(SendData_lidar1(std::vector<float>)),
-                operationW , SLOT(ReceiveInput_lidar1()) );
-    connect(inputDataW, SIGNAL(SendData_lidar2(std::vector<float>)),
-                operationW , SLOT(ReceiveInput_lidar2()) );
+    connect(inputDataW, SIGNAL(SendStatus_lidar1(bool)),
+                operationW , SLOT(ReceiveStatus_lidar1(bool)) );
+    connect(inputDataW, SIGNAL(SendStatus_lidar2(bool)),
+                operationW , SLOT(ReceiveStatus_lidar2(bool)) );
 
     // 外参初始化
     connect(inputDataW, SIGNAL(command_initialExtrinsic()), operationW , SLOT(InitialExtrinsic()) );

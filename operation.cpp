@@ -8,7 +8,7 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
 
     mParticipant.Create("calib",101);
     subscriber_lidar1.Create(mParticipant, "scan_1", 1, InputDataWindow::ReceiveMessage_fromlidar1);
-    subscriber_lidar2.Create(mParticipant, "scan_1", 1, InputDataWindow::ReceiveMessage_fromlidar2);
+    subscriber_lidar2.Create(mParticipant, "scan_2", 1, InputDataWindow::ReceiveMessage_fromlidar2);
 
     data_online = new QRadioButton(tr("在线"),this);
     data_offline = new QRadioButton(tr("离线"),this);
@@ -105,7 +105,8 @@ void InputDataWindow::InputDataLidar1(){
 
         inputData_lidar1->setEnabled(false);
 
-        emit SendData_lidar1(range1);
+        emit SendData_lidar1(false, range1);
+        emit SendStatus_lidar1(false);
 
         // 发送使能信号，会将整个窗口的按钮全部使能
         have_lidar1 = true;
@@ -115,12 +116,16 @@ void InputDataWindow::InputDataLidar1(){
     }
     // 在线数据
     if (data_id == 0){
+        range2.clear();
+        SendData_lidar2(true, range2);
+
         tmr1->start(50);
+        emit SendStatus_lidar1(true);
+
         inputData_lidar1->setEnabled(false);
         have_lidar1 = true;
         if (have_lidar1 == true && have_lidar2 == true){
             emit command_enablebutton();
-            draw_data->setEnabled(false);
         }
     }
 }
@@ -149,7 +154,8 @@ void InputDataWindow::InputDataLidar2(){
 
         inputData_lidar2->setEnabled(false);
 
-        emit SendData_lidar2(range2);
+        emit SendData_lidar2(false, range2);
+        emit SendStatus_lidar2(false);
 
         have_lidar2 = true;
         if (have_lidar1 == true && have_lidar2 == true){
@@ -158,15 +164,17 @@ void InputDataWindow::InputDataLidar2(){
     }
     // 在线数据
     if (data_id == 0){
+        range1.clear();
+        SendData_lidar2(true, range1);
+
         tmr2->start(50);
+        emit SendStatus_lidar2(true);
 
         inputData_lidar2->setEnabled(false);
         have_lidar2 = true;
         if (have_lidar1 == true && have_lidar2 == true){
             emit command_enablebutton();
-            draw_data->setEnabled(false);
         }
-
     }
 }
 void InputDataWindow::ReceiveMessage_fromlidar1(commander_robot_msg::LaserScan *message){
@@ -177,10 +185,12 @@ void InputDataWindow::ReceiveMessage_fromlidar2(commander_robot_msg::LaserScan *
 }
 void InputDataWindow::UpdateLidar1(){
 
-    emit SendData_lidar1(range1_online);
+    emit SendData_lidar1(true, range1_online);
+
 }
 void InputDataWindow::UpdateLidar2(){
-    emit SendData_lidar2(range2_online);
+    emit SendData_lidar2(true, range2_online);
+
 }
 
 void InputDataWindow::InitialExtrinsic(){
@@ -478,13 +488,16 @@ void OperationWindow::DrawWhichLidar(){
         command_record->insertPlainText(tr("只显示雷达2图像，"));
     }
     command_record->moveCursor(QTextCursor::NextRow);
+
     DrawData();
 }
 
 void OperationWindow::DrawData(){
-    command_row++;
-    command_record->insertPlainText(tr("画图\n"));
-    command_record->moveCursor(QTextCursor::NextRow);
+    // if (!online){
+        command_row++;
+        command_record->insertPlainText(tr("画图\n"));
+        command_record->moveCursor(QTextCursor::NextRow);
+    // }
 
     int draw_id = lidar_show->checkedId();
     double draw_increment1 = this->lidar1_increment_now->text().toDouble();
@@ -517,14 +530,24 @@ void OperationWindow::InitialExtrinsic(){
     dtheta_now->setText("0.1");
 }
 
-void OperationWindow::ReceiveInput_lidar1(){
+void OperationWindow::ReceiveStatus_lidar1(bool online){
     command_row++;
-    command_record->insertPlainText(tr("已加载雷达1的数据\n"));
+    if (online){
+        command_record->insertPlainText(tr("雷达1\n"));
+    }
+    else{
+        command_record->insertPlainText(tr("已加载雷达1的数据\n"));
+    }
     command_record->moveCursor(QTextCursor::NextRow);
 }
-void OperationWindow::ReceiveInput_lidar2(){
+void OperationWindow::ReceiveStatus_lidar2(bool online){
     command_row++;
-    command_record->insertPlainText(tr("已加载雷达2的数据\n"));
+    if (online){
+        command_record->insertPlainText(tr("雷达2\n"));
+    }
+    else{
+        command_record->insertPlainText(tr("已加载雷达1的数据\n"));
+    }
     command_record->moveCursor(QTextCursor::NextRow);
 }
 
