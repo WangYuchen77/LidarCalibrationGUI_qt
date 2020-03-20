@@ -157,6 +157,9 @@ void ShowResultWidget::draw(std::string way, double show_id, double increment1, 
 
 //    image_show = image;
     image_show = image.clone();
+    cv::namedWindow("11");
+    cv::resize(image_show,image_show, cv::Size(300,300));
+    cv::imshow("11", image_show);
 
 
 //    cv::Rect rect(50,20, 1500, 500);
@@ -167,8 +170,6 @@ void ShowResultWidget::draw(std::string way, double show_id, double increment1, 
 
 //    std::cout<<image.cols<<std::endl;
 //    std::cout<<image.rows<<std::endl;
-//    cv::namedWindow("11");
-//    cv::imshow("11", image_show);
 
 
 //    cv::Mat dst = cv::Mat::zeros(300, 300, CV_8UC3);
