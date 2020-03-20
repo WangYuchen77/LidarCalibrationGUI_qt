@@ -83,10 +83,10 @@ MainwindowWidget::MainwindowWidget(QWidget *parent):QWidget(parent){
             showResultW , SLOT(draw(double, double, double, double, double, double)) );
 
 }
-void MainwindowWidget::wheelEvent(QWheelEvent *event)
-{
-    double numDegrees = event->delta() / 8.0;
-    double numSteps = numDegrees / 15.0;
-    std::cout<<numDegrees<<std::endl;
-    std::cout<<numSteps<<std::endl;
-}
+//void MainwindowWidget::wheelEvent(QWheelEvent *event)
+//{
+//    double numDegrees = event->delta() / 8.0;
+//    double numSteps = numDegrees / 15.0;
+//    std::cout<<numDegrees<<std::endl;
+//    std::cout<<numSteps<<std::endl;
+//}

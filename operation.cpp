@@ -68,6 +68,14 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
     connect(clear_data, SIGNAL(clicked()) , this , SLOT(ClearData()) );
     connect(write_calibfile, SIGNAL(clicked()) , this , SLOT(WriteCalibFile()) );
     connect(this, SIGNAL(command_enablebutton()) , this , SLOT(EnableButton()) );
+
+
+    tmr1 = new QTimer(this);
+    connect(tmr1, SIGNAL(timeout()), this, SLOT(UpdateLidar1()));
+    connect(tmr1, SIGNAL(timeout()), this, SLOT(DrawData()));
+    tmr2 = new QTimer(this);
+    connect(tmr2, SIGNAL(timeout()), this, SLOT(UpdateLidar2()));
+    connect(tmr2, SIGNAL(timeout()), this, SLOT(DrawData()));
 }
 void InputDataWindow::InputDataLidar1(){
     // 按钮加载
@@ -78,11 +86,13 @@ void InputDataWindow::InputDataLidar1(){
 //    inputData_lidar1path_now->setText(path1.right(20));
 
     int data_id = data_source->checkedId();
+    data_online->setEnabled(false);
+    data_offline->setEnabled(false);
     // 离线数据
     if (data_id == 1){
+
         // 固定路径
         std::ifstream myfile_1((getenv("HOME") +path_lidar1).c_str());
-
         inputData_lidar1path_now->setEnabled(true);
         inputData_lidar1path_now->setText("lidar1.txt");
 
@@ -103,16 +113,15 @@ void InputDataWindow::InputDataLidar1(){
             emit command_enablebutton();
         }
     }
+    // 在线数据
     if (data_id == 0){
-        inputData_lidar1->setEnabled(false);
+        tmr1->start(50);
         inputData_lidar1->setEnabled(false);
         have_lidar1 = true;
         if (have_lidar1 == true && have_lidar2 == true){
-         emit command_enablebutton();
+            emit command_enablebutton();
+            draw_data->setEnabled(false);
         }
-        tmr1 = new QTimer(this);
-        connect(tmr1, SIGNAL(timeout()), this, SLOT(UpdateLidar1()));
-        tmr1->start(50);
     }
 }
 void InputDataWindow::InputDataLidar2(){
@@ -123,8 +132,10 @@ void InputDataWindow::InputDataLidar2(){
 //    inputData_lidar2path_now->setText(path2.right(20));
 
     int data_id = data_source->checkedId();
+    data_online->setEnabled(false);
+    data_offline->setEnabled(false);
     // 离线数据
-    if (data_id == 1){
+    if (data_id == 1){     
         std::ifstream myfile_2((getenv("HOME") +path_lidar2).c_str());
         inputData_lidar2path_now->setEnabled(true);
         inputData_lidar2path_now->setText("lidar2.txt");
@@ -145,15 +156,17 @@ void InputDataWindow::InputDataLidar2(){
             emit command_enablebutton();
         }
     }
+    // 在线数据
     if (data_id == 0){
+        tmr2->start(50);
+
         inputData_lidar2->setEnabled(false);
         have_lidar2 = true;
         if (have_lidar1 == true && have_lidar2 == true){
             emit command_enablebutton();
+            draw_data->setEnabled(false);
         }
-        tmr2 = new QTimer(this);
-        connect(tmr2, SIGNAL(timeout()), this, SLOT(UpdateLidar2()));
-        tmr2->start(50);
+
     }
 }
 void InputDataWindow::ReceiveMessage_fromlidar1(commander_robot_msg::LaserScan *message){
@@ -177,10 +190,17 @@ void InputDataWindow::DrawData(){
     emit command_draw();
 }
 void InputDataWindow::ClearData(){
-    inputData_lidar1->setEnabled(true);
-    inputData_lidar2->setEnabled(true);
     range1.clear();
     range2.clear();
+
+    tmr1->stop();
+    tmr2->stop();
+
+    data_online->setEnabled(true);
+    data_offline->setEnabled(true);
+    inputData_lidar1->setEnabled(true);
+    inputData_lidar2->setEnabled(true);
+
 
     have_lidar1 = false;
     have_lidar2 = false;
