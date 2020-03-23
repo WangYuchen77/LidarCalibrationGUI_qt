@@ -46,10 +46,16 @@ public:
     std::vector<float> range1;
     std::vector<float> range2;
     cv::Mat image_show;
+    int show_col_0;
+    int show_row_0;
+    int show_col;
+    int show_row;
+
     bool haveData1;
     bool haveData2;
     bool haveDraw;
-int time11 = 0;
+
+
     cv::Mat AddAxes(cv::Mat inputMat);
 
 private :

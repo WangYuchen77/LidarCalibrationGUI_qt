@@ -63,7 +63,7 @@ ShowResultWidget::ShowResultWidget(QWidget *parent):QWidget(parent){
     connect(UpButton,SIGNAL(clicked()),this,SLOT(onUpClicked()));
     connect(DownButton,SIGNAL(clicked()),this,SLOT(onDownClicked()));
 
-// resize窗口？
+// 窗口？
 //    resize(890,850);
 
 }
@@ -81,8 +81,7 @@ void ShowResultWidget::ReceiveData_lidar2(bool online, std::vector<float> range2
 }
 // 画图核心代码
 void ShowResultWidget::draw(std::string way, double show_id, double increment1, double increment2, double angle, double extrin_x, double extrin_y){
-    std::cout<<time11<<std::endl;
-    time11++;
+
 //    std::cout<<increment1<<std::endl;
 //    std::cout<<increment2<<std::endl;
 //    std::cout<<angle<<std::endl;
@@ -157,9 +156,7 @@ void ShowResultWidget::draw(std::string way, double show_id, double increment1, 
 
 //    image_show = image;
     image_show = image.clone();
-    cv::namedWindow("11");
-    cv::resize(image_show,image_show, cv::Size(300,300));
-    cv::imshow("11", image_show);
+
 
 
 //    cv::Rect rect(50,20, 1500, 500);
@@ -224,7 +221,19 @@ void ShowResultWidget::draw(std::string way, double show_id, double increment1, 
     // 如果是自动更新的在线雷达数据，并且没有人按图片复位按钮(way == "Timer")，并且图片已经被放大缩小或者移动了(isInitialPose == false)
     // 就不要更新图片（什么都不做）
     if (way == "Timer" && isInitialPose == false){
-        time11 += 100;
+
+        cv::Mat imageAddAxes = AddAxes(image_show);
+        QImage _image_show;
+        // cv::cvtColor(imageAddAxes,imageAddAxes,cv::COLOR_BGR2RGB);
+        _image_show = QImage(static_cast<uchar *>(imageAddAxes.data),imageAddAxes.cols,imageAddAxes.rows, QImage::Format_RGB888);
+        cv::cvtColor(imageAddAxes,imageAddAxes,cv::COLOR_RGB2BGR);
+        _image_show = _image_show.copy(show_col_0, show_row_0, show_col, show_row);
+        // QLabel显示这张Pixmap
+        *pix = QPixmap::fromImage(_image_show);
+        action=ShowResultWidget::None;
+        mergePicture->setScaledContents(true);
+        mergePicture->setPixmap(*pix);
+
     }
     else{
         if (way == "Button"){
@@ -358,6 +367,7 @@ void ShowResultWidget::wheelEvent(QWheelEvent* event)     //鼠标滑轮事件
 // 对图像进行放大缩小移动操作
 void ShowResultWidget::paintEvent(QPaintEvent *event)
 {
+
     if (haveData1 == true && haveData2 == true){
         QPainter painter(this);
         int NowW = ratio *pixW;
@@ -400,6 +410,11 @@ void ShowResultWidget::paintEvent(QPaintEvent *event)
             int offsety=Alloffset.y()+offset.y();
             Alloffset.setY(offsety);
 
+            show_col_0 = (matrix_size-NowW)/2 + offsetx;
+            show_row_0 = (matrix_size-NowW)/2 + offsety;
+            show_col = NowW;
+            show_row = NowH;
+
             // 截取QImage的一部分进行显示，四个参数（左上角col，左上角row，图片col宽，图片row高）
             // 下面代码截取的部分是，永远以原图像中心为放大缩小点，并添加偏移
             _image_show = _image_show.copy( (matrix_size-NowW)/2 + offsetx,
@@ -416,6 +431,10 @@ void ShowResultWidget::paintEvent(QPaintEvent *event)
 
         if(action==ShowResultWidget::Move)                    //移动
         {
+            //cv::namedWindow("11");
+                    //cv::Mat fff;
+                    //cv::resize(image_show,fff, cv::Size(300,300));
+                    //cv::imshow("11", fff);
             int offsetx=Alloffset.x()+offset.x();
             Alloffset.setX(offsetx);
 
@@ -431,6 +450,12 @@ void ShowResultWidget::paintEvent(QPaintEvent *event)
             cv::cvtColor(imageAddAxes,imageAddAxes,cv::COLOR_BGR2RGB);
             _image_show = QImage(static_cast<uchar *>(imageAddAxes.data),imageAddAxes.cols,imageAddAxes.rows,QImage::Format_RGB888);
             cv::cvtColor(imageAddAxes,imageAddAxes,cv::COLOR_RGB2BGR);
+
+
+            show_col_0 = (matrix_size-NowW)/2 + offsetx;
+            show_row_0 = (matrix_size-NowW)/2 + offsety;
+            show_col = NowW;
+            show_row = NowH;
 
             _image_show = _image_show.copy( (matrix_size-NowW)/2 + offsetx,
                                             (matrix_size-NowW)/2 + offsety,
