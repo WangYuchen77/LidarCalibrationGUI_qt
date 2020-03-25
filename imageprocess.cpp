@@ -5,7 +5,8 @@
 ShowResultWidget::ShowResultWidget(QWidget *parent):QWidget(parent){
     // 显示区域
     mergePicture= new QLabel(tr("雷达数据标定后合并显示"),this);
-    mergePicture->setFixedSize(800,800);
+    // mergePicture->setFixedSize(800,800); // Mac use this params
+    mergePicture->setFixedSize(1050,1050); // Ubuntu use this
 
     matrix_size = 2200; // opencv图像大小
     haveData1 = false;
@@ -20,7 +21,8 @@ ShowResultWidget::ShowResultWidget(QWidget *parent):QWidget(parent){
     DownButton = new QPushButton("向下",this);
     DisableButton();
 
-    Paint = QRect(10,10,810,810);
+//    Paint = QRect(10,10,810,810);// Mac use this
+    Paint = QRect(10,10,1060,1060);// Ubuntu use this
     QPoint Alloffset(0,0);
     size_label = new QLabel("100%",this);
 
