@@ -48,6 +48,7 @@ public:
     bool have_lidar2;
     std::string path_lidar1 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar1_data.txt";
     std::string path_lidar2 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar2_data.txt";
+
 //    std::string path_lidar1 = "/yuchen/LidarCalibrationGUI_qt/data/lidar1_data.txt";
 //    std::string path_lidar2 = "/yuchen/LidarCalibrationGUI_qt/data/lidar2_data.txt";
 
@@ -87,6 +88,7 @@ signals:
     void command_draw_byTimer();
     void command_clear();
     void command_enablebutton();
+    void command_writeCalibFile();
 
 private slots:
     void UpdateLidar1();
@@ -106,6 +108,9 @@ class OperationWindow: public QWidget{
     Q_OBJECT
 public:
     OperationWindow(QWidget *parent= 0);
+
+    // std::string path_calibFile_SLAM = "/CodeBase/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
+    std::string path_calibFile_planner = "/CodeBase/LidarCalibrationGUI_qt/file/params2_robot.json";
 
     QVBoxLayout *operationlayout;
 
@@ -173,6 +178,7 @@ private slots:
     void DrawDataByTimer();
     void DrawData();
     void DrawData(std::string);
+    void WriteCalibFile();
 
     void DrawWhichLidar();
 

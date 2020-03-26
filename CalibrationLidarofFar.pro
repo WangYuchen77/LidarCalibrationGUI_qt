@@ -55,8 +55,9 @@ HEADERS += \
         mainwindow.h \
         imageprocess.h \
     operation.h \
-    common.h
-    include/
+    common.h \
+    include/ \
+    include/rapidjson
 
 FORMS += \
         mainwindow.ui

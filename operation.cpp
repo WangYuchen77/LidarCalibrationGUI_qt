@@ -1,6 +1,15 @@
 #include "operation.h"
 // InputDataWindow构造函数
 
+#include <string>
+#include "include/rapidjson/document.h"
+#include "include/rapidjson/writer.h"
+#include "include/rapidjson/stringbuffer.h"
+#include "include/rapidjson/filewritestream.h"
+#include "include/rapidjson/prettywriter.h"
+#include "include/rapidjson/filereadstream.h"
+
+
 std::vector<float> range1_online;
 std::vector<float> range2_online;
 InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
@@ -214,7 +223,6 @@ void InputDataWindow::ClearData(){
     inputData_lidar1->setEnabled(true);
     inputData_lidar2->setEnabled(true);
 
-
     have_lidar1 = false;
     have_lidar2 = false;
     initial_extrinsic->setEnabled(false);
@@ -222,17 +230,19 @@ void InputDataWindow::ClearData(){
     clear_data->setEnabled(false);
     inputData_lidar1path_now->setEnabled(false);
     inputData_lidar2path_now->setEnabled(false);
+    write_calibfile->setEnabled(false);
 
     emit(command_clear());
 }
 void InputDataWindow::WriteCalibFile(){
-
+    emit(command_writeCalibFile());
 }
 
 void InputDataWindow::EnableButton(){
     initial_extrinsic->setEnabled(true);
     draw_data->setEnabled(true);
     clear_data->setEnabled(true);
+    write_calibfile->setEnabled(true);
 }
 
 OperationWindow::OperationWindow(QWidget *parent):QWidget(parent){
@@ -579,6 +589,62 @@ void OperationWindow::ReceiveStatus_lidar2(bool online){
         command_record->insertPlainText(tr("已加载雷达1的数据\n"));
     }
     command_record->moveCursor(QTextCursor::NextRow);
+}
+void OperationWindow::WriteCalibFile(){
+
+    double draw_increment1 = this->lidar1_increment_now->text().toDouble();
+    double draw_increment2 = this->lidar2_increment_now->text().toDouble();
+    double draw_x = this->extrinsic_x_now->text().toDouble();
+    double draw_y = this->extrinsic_y_now->text().toDouble();
+    double draw_theta = this->extrinsic_theta_now->text().toDouble();
+
+    if (draw_x!=0 && draw_y!= 0 && draw_theta!=0 && draw_increment1!= 0 && draw_increment2!=0 ){
+        command_row++;
+        command_record->insertPlainText(tr("正在向配置文件写入外参...\n"));
+        command_record->moveCursor(QTextCursor::NextRow);
+
+        FILE* fp_read = fopen((getenv("HOME")+path_calibFile_planner).c_str(), "r");
+
+        if (fp_read == NULL)
+        {
+            command_row++;
+            command_record->insertPlainText(tr("无模板文件！请检查路径...\n"));
+            command_record->moveCursor(QTextCursor::NextRow);
+        }
+        else{
+            char readBuffer[65536];
+            rapidjson::FileReadStream is(fp_read, readBuffer, sizeof(readBuffer));
+            rapidjson::Document doc;
+            doc.ParseStream(is);
+            fclose(fp_read);
+
+            rapidjson::Value& value_x = doc["extrinsic"]["extrinsic_laser2"][0];
+            rapidjson::Value& value_y = doc["extrinsic"]["extrinsic_laser2"][1];
+            rapidjson::Value& value_theta = doc["extrinsic"]["extrinsic_laser2"][2];
+            value_x.SetDouble(11.1);
+            value_y.SetDouble(22.2);
+            value_theta.SetDouble(33.3);
+
+            FILE* fp_write = fopen((getenv("HOME")+path_calibFile_planner).c_str(), "w");
+            // 创建rapidjson的writer
+            char writebuffer[65536];
+            rapidjson::FileWriteStream os(fp_write, writebuffer, sizeof(writebuffer));
+            rapidjson::PrettyWriter<rapidjson::FileWriteStream> writer(os);
+            // 将doc的更改写进json文件
+            doc.Accept(writer);
+            // 关闭json文件
+            fclose(fp_write);
+
+            command_row++;
+            command_record->insertPlainText(tr("外参文件已输出\n"));
+            command_record->moveCursor(QTextCursor::NextRow);
+        }
+    }
+    else{
+        command_row++;
+        command_record->insertPlainText(tr("无法输出外参文件，输入外参不合法！\n"));
+        command_record->moveCursor(QTextCursor::NextRow);
+    }
 }
 
 void OperationWindow::EnableButton(){

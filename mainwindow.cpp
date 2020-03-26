@@ -75,6 +75,8 @@ MainwindowWidget::MainwindowWidget(QWidget *parent):QWidget(parent){
     connect(inputDataW, SIGNAL(command_clear()), operationW , SLOT(DisableButton()) );
     // 使能按钮
     connect(inputDataW, SIGNAL(command_enablebutton()), operationW , SLOT(EnableButton()) );
+    // 输出外参文件
+    connect(inputDataW, SIGNAL(command_writeCalibFile()), operationW , SLOT(WriteCalibFile()) );
 
 
     // OperationWindow to ShowResultWindow
