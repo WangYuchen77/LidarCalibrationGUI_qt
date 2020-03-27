@@ -33,6 +33,7 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
     inputData_lidar2path = new QLabel(tr("雷达2文件路径: "),this);
     inputData_lidar2path_now = new QLabel(tr("无文件"),this);
     inputData_lidar2path_now->setFrameStyle(QFrame::Panel|QFrame::Sunken);
+
     inputData_lidar2path_now->setEnabled(false);
     inputData_lidar1path_now->setEnabled(false);
     initial_extrinsic->setEnabled(false);
