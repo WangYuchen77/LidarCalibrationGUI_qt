@@ -49,10 +49,10 @@ MainwindowWidget::MainwindowWidget(QWidget *parent):QWidget(parent){
     // InputDataWindow to ShowResultWidget
     // 传雷达点给图像窗口
     qRegisterMetaType<std::vector<float>>("inputdata");
-    connect(inputDataW, SIGNAL(SendData_lidar1(std::vector<float>)),
-            showResultW, SLOT(ReceiveData_lidar1(std::vector<float>)));
-    connect(inputDataW, SIGNAL(SendData_lidar2(std::vector<float>)),
-            showResultW, SLOT(ReceiveData_lidar2(std::vector<float>)));
+    connect(inputDataW, SIGNAL(SendData_lidar1(bool, std::vector<float>)),
+            showResultW, SLOT(ReceiveData_lidar1(bool, std::vector<float>)));
+    connect(inputDataW, SIGNAL(SendData_lidar2(bool, std::vector<float>)),
+            showResultW, SLOT(ReceiveData_lidar2(bool, std::vector<float>)));
     // 清除图像
     connect(inputDataW, SIGNAL(command_clear()), showResultW , SLOT(ClearImage()) );
     // 数据清除命令，画图按钮全部失能
@@ -62,31 +62,33 @@ MainwindowWidget::MainwindowWidget(QWidget *parent):QWidget(parent){
 
     // InputDataWindow to OperationWindow
     // 接受雷达数据
-    connect(inputDataW, SIGNAL(SendData_lidar1(std::vector<float>)),
-                operationW , SLOT(ReceiveInput_lidar1()) );
-    connect(inputDataW, SIGNAL(SendData_lidar2(std::vector<float>)),
-                operationW , SLOT(ReceiveInput_lidar2()) );
-
+    connect(inputDataW, SIGNAL(SendStatus_lidar1(bool)),
+                operationW , SLOT(ReceiveStatus_lidar1(bool)) );
+    connect(inputDataW, SIGNAL(SendStatus_lidar2(bool)),
+                operationW , SLOT(ReceiveStatus_lidar2(bool)) );
     // 外参初始化
     connect(inputDataW, SIGNAL(command_initialExtrinsic()), operationW , SLOT(InitialExtrinsic()) );
     // 画图命令
-    connect(inputDataW, SIGNAL(command_draw()), operationW , SLOT(DrawData()) );
+    connect(inputDataW, SIGNAL(command_draw_byButton()), operationW , SLOT(DrawDataByButton()) );
+    connect(inputDataW, SIGNAL(command_draw_byTimer()), operationW , SLOT(DrawDataByTimer()) );
     // 清除数据后，把外参按钮失能
     connect(inputDataW, SIGNAL(command_clear()), operationW , SLOT(DisableButton()) );
     // 使能按钮
     connect(inputDataW, SIGNAL(command_enablebutton()), operationW , SLOT(EnableButton()) );
+    // 输出外参文件
+    connect(inputDataW, SIGNAL(command_writeCalibFile()), operationW , SLOT(WriteCalibFile()) );
 
 
     // OperationWindow to ShowResultWindow
     // 画图是由operationWindow向ShowResultWindow发出的命令
-    connect(operationW, SIGNAL(command_draw(double, double, double, double, double, double)),
-            showResultW , SLOT(draw(double, double, double, double, double, double)) );
+    connect(operationW, SIGNAL(command_draw(std::string, double, double, double, double, double, double)),
+            showResultW , SLOT(draw(std::string, double, double, double, double, double, double)) );
 
 }
-void MainwindowWidget::wheelEvent(QWheelEvent *event)
-{
-    double numDegrees = event->delta() / 8.0;
-    double numSteps = numDegrees / 15.0;
-    std::cout<<numDegrees<<std::endl;
-    std::cout<<numSteps<<std::endl;
-}
+//void MainwindowWidget::wheelEvent(QWheelEvent *event)
+//{
+//    double numDegrees = event->delta() / 8.0;
+//    double numSteps = numDegrees / 15.0;
+//    std::cout<<numDegrees<<std::endl;
+//    std::cout<<numSteps<<std::endl;
+//}

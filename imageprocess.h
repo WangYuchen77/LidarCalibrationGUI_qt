@@ -46,9 +46,15 @@ public:
     std::vector<float> range1;
     std::vector<float> range2;
     cv::Mat image_show;
+    int show_col_0;
+    int show_row_0;
+    int show_col;
+    int show_row;
+
     bool haveData1;
     bool haveData2;
     bool haveDraw;
+
 
     cv::Mat AddAxes(cv::Mat inputMat);
 
@@ -75,7 +81,10 @@ private :
     QPushButton  *UpButton;
     QPushButton  *DownButton;
 
-    void AddComboItem(QComboBox* cmbo);
+    bool isInitialPose;
+    bool isDataOnline;
+    bool isReset;
+
 
     bool event(QEvent * event);
     void wheelEvent(QWheelEvent* e);     //鼠标滑轮事件
@@ -85,9 +94,9 @@ private :
 
 private slots:
 
-    void ReceiveData_lidar1(std::vector<float> range1);
-    void ReceiveData_lidar2(std::vector<float> range2);
-    void draw(double, double, double, double, double, double);
+    void ReceiveData_lidar1(bool, std::vector<float> range1);
+    void ReceiveData_lidar2(bool, std::vector<float> range2);
+    void draw(std::string, double, double, double, double, double, double);
     void ClearImage();
 
     void EnableButton();

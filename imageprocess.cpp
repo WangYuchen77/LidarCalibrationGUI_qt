@@ -5,7 +5,8 @@
 ShowResultWidget::ShowResultWidget(QWidget *parent):QWidget(parent){
     // 显示区域
     mergePicture= new QLabel(tr("雷达数据标定后合并显示"),this);
-    mergePicture->setFixedSize(800,800);
+    // mergePicture->setFixedSize(800,800); // Mac use this params
+    mergePicture->setFixedSize(1050,1050); // Ubuntu use this
 
     matrix_size = 2200; // opencv图像大小
     haveData1 = false;
@@ -20,7 +21,8 @@ ShowResultWidget::ShowResultWidget(QWidget *parent):QWidget(parent){
     DownButton = new QPushButton("向下",this);
     DisableButton();
 
-    Paint = QRect(10,10,810,810);
+//    Paint = QRect(10,10,810,810);// Mac use this
+    Paint = QRect(10,10,1060,1060);// Ubuntu use this
     QPoint Alloffset(0,0);
     size_label = new QLabel("100%",this);
 
@@ -51,6 +53,8 @@ ShowResultWidget::ShowResultWidget(QWidget *parent):QWidget(parent){
     action = ShowResultWidget::None;
     pixW = 2200;            //设置图片尺寸为985*740
     pixH = 2200;
+    isInitialPose = true;
+    isReset = false;
 
     pix = new QPixmap;
 
@@ -61,22 +65,25 @@ ShowResultWidget::ShowResultWidget(QWidget *parent):QWidget(parent){
     connect(UpButton,SIGNAL(clicked()),this,SLOT(onUpClicked()));
     connect(DownButton,SIGNAL(clicked()),this,SLOT(onDownClicked()));
 
-// resize窗口？
+// 窗口？
 //    resize(890,850);
 
 }
 // 接收雷达1数据
-void ShowResultWidget::ReceiveData_lidar1(std::vector<float> range1){
+void ShowResultWidget::ReceiveData_lidar1(bool online, std::vector<float> range1){
     this->range1 = range1;
-    haveData1 = true;
+    haveData1 = true;  
+    isDataOnline = online;
 }
 // 接收雷达2数据
-void ShowResultWidget::ReceiveData_lidar2(std::vector<float> range2){
+void ShowResultWidget::ReceiveData_lidar2(bool online, std::vector<float> range2){
     this->range2 = range2;
     haveData2 = true;
+    isDataOnline = online;
 }
 // 画图核心代码
-void ShowResultWidget::draw(double show_id, double increment1, double increment2, double angle, double extrin_x, double extrin_y){
+void ShowResultWidget::draw(std::string way, double show_id, double increment1, double increment2, double angle, double extrin_x, double extrin_y){
+
 //    std::cout<<increment1<<std::endl;
 //    std::cout<<increment2<<std::endl;
 //    std::cout<<angle<<std::endl;
@@ -122,6 +129,7 @@ void ShowResultWidget::draw(double show_id, double increment1, double increment2
     yList_1.clear();
     xList_2.clear();
     yList_2.clear();
+
     std::vector<cv::Point2d> ptSet1_original;
     std::vector<cv::Point2d> ptSet2_original;
     for (int i = 0 ; i< pointCloudSize_lidar1; i++){
@@ -152,6 +160,7 @@ void ShowResultWidget::draw(double show_id, double increment1, double increment2
     image_show = image.clone();
 
 
+
 //    cv::Rect rect(50,20, 1500, 500);
 //    cv::Mat image = image1(rect);
 
@@ -160,8 +169,6 @@ void ShowResultWidget::draw(double show_id, double increment1, double increment2
 
 //    std::cout<<image.cols<<std::endl;
 //    std::cout<<image.rows<<std::endl;
-//    cv::namedWindow("11");
-//    cv::imshow("11", image_show);
 
 
 //    cv::Mat dst = cv::Mat::zeros(300, 300, CV_8UC3);
@@ -208,8 +215,38 @@ void ShowResultWidget::draw(double show_id, double increment1, double increment2
     // 图片适应QLabel的大小，加了这句话雷达图像变模糊了,KeepAspectRatio改成了KeepAspectRatioByExpanding
     // img = img.scaled(mergePicture->size(), Qt::KeepAspectRatio);
 //    img = img.scaled(mergePicture->size(), Qt::KeepAspectRatioByExpanding);
-    mergePicture->setScaledContents(true);
-    mergePicture->setPixmap(QPixmap::fromImage(img));
+
+
+//    if (isInitialPose && !isDataOnline){
+//    if (!isDataOnline){
+
+    // 如果是自动更新的在线雷达数据，并且没有人按图片复位按钮(way == "Timer")，并且图片已经被放大缩小或者移动了(isInitialPose == false)
+    // 就不要更新图片（什么都不做）
+    if (way == "Timer" && isInitialPose == false){
+
+        cv::Mat imageAddAxes = AddAxes(image_show);
+        QImage _image_show;
+        // cv::cvtColor(imageAddAxes,imageAddAxes,cv::COLOR_BGR2RGB);
+        _image_show = QImage(static_cast<uchar *>(imageAddAxes.data),imageAddAxes.cols,imageAddAxes.rows, QImage::Format_RGB888);
+        cv::cvtColor(imageAddAxes,imageAddAxes,cv::COLOR_RGB2BGR);
+        _image_show = _image_show.copy(show_col_0, show_row_0, show_col, show_row);
+        // QLabel显示这张Pixmap
+        *pix = QPixmap::fromImage(_image_show);
+        action=ShowResultWidget::None;
+        mergePicture->setScaledContents(true);
+        mergePicture->setPixmap(*pix);
+
+    }
+    else{
+        if (way == "Button"){
+            isInitialPose = true;
+        }
+        mergePicture->setScaledContents(true);
+        mergePicture->setPixmap(QPixmap::fromImage(img));
+    }
+
+
+
 
     // 暂时不知道，为啥得把正常的BGR换到RGB，放大缩小那些功能才能显示正常颜色
     // 放大缩小的那些函数，是BGR->RGB->BGR
@@ -221,6 +258,7 @@ void ShowResultWidget::draw(double show_id, double increment1, double increment2
 
     haveDraw = true;
 }
+
 //void ShowResultWidget::paintEvent(QPaintEvent *){
 
 //    QPainter painter(this);
@@ -284,7 +322,7 @@ bool ShowResultWidget::event(QEvent * event){
                 QApplication::setOverrideCursor(Qt::OpenHandCursor); //设置鼠标样式
                 PreDot = mouse->pos();
             }
-
+            isInitialPose = false;
         }
         else if(event->type() == QEvent::MouseButtonRelease){
             QMouseEvent *mouse = dynamic_cast<QMouseEvent* >(event);
@@ -293,6 +331,7 @@ bool ShowResultWidget::event(QEvent * event){
                 QApplication::setOverrideCursor(Qt::ArrowCursor); //改回鼠标样式
                 press=false;
             }
+            isInitialPose = false;
         }
         if(event->type() == QEvent::MouseMove){              //移动图片
             if(press){
@@ -304,6 +343,7 @@ bool ShowResultWidget::event(QEvent * event){
                 action = ShowResultWidget::Move;
                 this->update();
             }
+            isInitialPose = false;
         }
     }
     return QWidget::event(event);
@@ -314,10 +354,12 @@ void ShowResultWidget::wheelEvent(QWheelEvent* event)     //鼠标滑轮事件
     if (haveData1 == true && haveData2 == true && haveDraw == true){
         if (event->delta()>0){      //上滑,缩小
             action=ShowResultWidget::Shrink;
+            isInitialPose = false;
             this->update();
         }
         else{                    //下滑,放大
             action=ShowResultWidget::Amplification;
+            isInitialPose = false;
             this->update();
         }
         event->accept();
@@ -327,6 +369,7 @@ void ShowResultWidget::wheelEvent(QWheelEvent* event)     //鼠标滑轮事件
 // 对图像进行放大缩小移动操作
 void ShowResultWidget::paintEvent(QPaintEvent *event)
 {
+
     if (haveData1 == true && haveData2 == true){
         QPainter painter(this);
         int NowW = ratio *pixW;
@@ -369,6 +412,11 @@ void ShowResultWidget::paintEvent(QPaintEvent *event)
             int offsety=Alloffset.y()+offset.y();
             Alloffset.setY(offsety);
 
+            show_col_0 = (matrix_size-NowW)/2 + offsetx;
+            show_row_0 = (matrix_size-NowW)/2 + offsety;
+            show_col = NowW;
+            show_row = NowH;
+
             // 截取QImage的一部分进行显示，四个参数（左上角col，左上角row，图片col宽，图片row高）
             // 下面代码截取的部分是，永远以原图像中心为放大缩小点，并添加偏移
             _image_show = _image_show.copy( (matrix_size-NowW)/2 + offsetx,
@@ -385,6 +433,10 @@ void ShowResultWidget::paintEvent(QPaintEvent *event)
 
         if(action==ShowResultWidget::Move)                    //移动
         {
+            //cv::namedWindow("11");
+                    //cv::Mat fff;
+                    //cv::resize(image_show,fff, cv::Size(300,300));
+                    //cv::imshow("11", fff);
             int offsetx=Alloffset.x()+offset.x();
             Alloffset.setX(offsetx);
 
@@ -400,6 +452,12 @@ void ShowResultWidget::paintEvent(QPaintEvent *event)
             cv::cvtColor(imageAddAxes,imageAddAxes,cv::COLOR_BGR2RGB);
             _image_show = QImage(static_cast<uchar *>(imageAddAxes.data),imageAddAxes.cols,imageAddAxes.rows,QImage::Format_RGB888);
             cv::cvtColor(imageAddAxes,imageAddAxes,cv::COLOR_RGB2BGR);
+
+
+            show_col_0 = (matrix_size-NowW)/2 + offsetx;
+            show_row_0 = (matrix_size-NowW)/2 + offsety;
+            show_col = NowW;
+            show_row = NowH;
 
             _image_show = _image_show.copy( (matrix_size-NowW)/2 + offsetx,
                                             (matrix_size-NowW)/2 + offsety,
@@ -464,6 +522,7 @@ void ShowResultWidget::ClearImage(){
     haveData1 = false;
     haveData2 = false;
     haveDraw = false;
+    isInitialPose = true;
 }
 // 激活所有按钮
 void ShowResultWidget::EnableButton(){
@@ -488,16 +547,19 @@ void ShowResultWidget::DisableButton(){
 void  ShowResultWidget::onBigClicked()
 {
     action=ShowResultWidget::Amplification;
+    isInitialPose = false;
     this->update();
 }
 void  ShowResultWidget::onLittleClicked()
 {
     action=ShowResultWidget::Shrink;
+    isInitialPose = false;
     this->update();
 }
 void ShowResultWidget::onUpClicked()
 {
     action=ShowResultWidget::Move;
+    isInitialPose = false;
     offset.setX(0);
     offset.setY(20);
     this->update();
@@ -505,6 +567,7 @@ void ShowResultWidget::onUpClicked()
 void ShowResultWidget::onDownClicked()
 {
     action=ShowResultWidget::Move;
+    isInitialPose = false;
     offset.setX(0);
     offset.setY(-20);
     this->update();
@@ -512,6 +575,7 @@ void ShowResultWidget::onDownClicked()
 void ShowResultWidget::OnLeftClicked()
 {
     action=ShowResultWidget::Move;
+    isInitialPose = false;
     offset.setX(20);
     offset.setY(0);
     this->update();
@@ -519,6 +583,7 @@ void ShowResultWidget::OnLeftClicked()
 void ShowResultWidget::OnRightClicked()
 {
     action=ShowResultWidget::Move;
+    isInitialPose = false;
     offset.setX(-20) ;
     offset.setY(0) ;
     this->update();

@@ -29,7 +29,7 @@ class MainwindowWidget : public QWidget
     Q_OBJECT
 public:
     MainwindowWidget(QWidget *parent=0);
-    void wheelEvent(QWheelEvent *event);
+//    void wheelEvent(QWheelEvent *event);
 
     QGridLayout *mainlayout;
 

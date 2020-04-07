@@ -1,0 +1,30 @@
+{
+    "extrinsic": {
+        "extrinsic_laser1": [
+            0.3787,
+            -0.2477,
+            0.7854
+        ],
+        "extrinsic_laser2": [
+            11.1,
+            22.2,
+            33.3
+        ],
+        "extrinsic_realsense": [
+            0.38,
+            0.0,
+            -1.570796326794897
+        ]
+    },
+    "robot_width_meter": 0.63,
+    "robot_height_meter": 0.89,
+    "robot_offset_factor_min": 1.1,
+    "robot_offset_factor_max": 1.3,
+    "max_v": 1.2,
+    "max_omega": 0.4,
+    "acc_up": 0.02,
+    "acc_down": 0.08,
+    "acc_omega": 0.01,
+    "action_max_v": 0.3,
+    "action_max_omega": 0.3
+}

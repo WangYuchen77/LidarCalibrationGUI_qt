@@ -26,10 +26,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 TEMPLATE = app
 #CONFIG += console c++11
 CONFIG -= app_bundle
-INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/opencv4/opencv2/
-INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/
-INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/opencv4/
-LIBS += -L/usr/local/Cellar/opencv/4.1.2/lib/ -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs
+# Mac
+#INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/opencv4/opencv2/
+#INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/
+#INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/opencv4/
+#LIBS += -L/usr/local/Cellar/opencv/4.1.2/lib/ -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs
+# Ubuntu
+INCLUDEPATH += /usr/local/opencv/
+INCLUDEPATH += /usr/local/opencv/include
+INCLUDEPATH += /usr/local/include/fastrtps
+INCLUDEPATH += /usr/local/include/fastcdr
+
+LIBS += -L/usr/local/lib/ -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs -lfastrtps -lfastcdr
 
 
 SOURCES += \
@@ -37,13 +45,19 @@ SOURCES += \
         mainwindow.cpp\
         imageprocess.cpp \
     operation.cpp \
-    common.cpp
+    common.cpp \
+    include/LaserScanPubSubTypes.cxx \
+    include/LaserScan.cxx \
+    include/Time.cxx
+
 
 HEADERS += \
         mainwindow.h \
         imageprocess.h \
     operation.h \
-    common.h
+    common.h \
+    include/ \
+    include/rapidjson
 
 FORMS += \
         mainwindow.ui

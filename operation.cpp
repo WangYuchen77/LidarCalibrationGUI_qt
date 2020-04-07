@@ -1,18 +1,39 @@
 #include "operation.h"
 // InputDataWindow构造函数
+
+#include <string>
+#include "include/rapidjson/document.h"
+#include "include/rapidjson/writer.h"
+#include "include/rapidjson/stringbuffer.h"
+#include "include/rapidjson/filewritestream.h"
+#include "include/rapidjson/prettywriter.h"
+#include "include/rapidjson/filereadstream.h"
+
+
+std::vector<float> range1_online;
+std::vector<float> range2_online;
 InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
-    inputData_lidar1 = new QPushButton(tr("加载雷达1数据"),this);
-    inputData_lidar1path = new QLabel(tr("雷达1文件路径: "),this);
-    inputData_lidar1path_now = new QLabel(tr("无文件"),this);
-    inputData_lidar1path_now->setFrameStyle(QFrame::Panel|QFrame::Sunken);
+
+
+    mParticipant.Create("calib",101);
+    subscriber_lidar1.Create(mParticipant, "scan_1", 1, InputDataWindow::ReceiveMessage_fromlidar1);
+    subscriber_lidar2.Create(mParticipant, "scan_2", 1, InputDataWindow::ReceiveMessage_fromlidar2);
+
+    data_online = new QRadioButton(tr("在线"),this);
+    data_offline = new QRadioButton(tr("离线"),this);
+    inputData_lidar1 = new QPushButton(tr("加载雷达1数据"),this);  
     inputData_lidar2 = new QPushButton(tr("加载雷达2数据"),this);
-    inputData_lidar2path = new QLabel(tr("雷达2文件路径: "),this);
-    inputData_lidar2path_now = new QLabel(tr("无文件"),this);
-    inputData_lidar2path_now->setFrameStyle(QFrame::Panel|QFrame::Sunken);
     initial_extrinsic = new QPushButton(tr("设置默认外参数"),this);
     draw_data = new QPushButton(tr("画图 / 图片复位"),this);
     clear_data = new QPushButton(tr("清除数据及图像"),this);
     write_calibfile = new QPushButton(tr("输出外参标定结果"),this);
+    inputData_lidar1path = new QLabel(tr("雷达1文件路径: "),this);
+    inputData_lidar1path_now = new QLabel(tr("无文件"),this);
+    inputData_lidar1path_now->setFrameStyle(QFrame::Panel|QFrame::Sunken);
+    inputData_lidar2path = new QLabel(tr("雷达2文件路径: "),this);
+    inputData_lidar2path_now = new QLabel(tr("无文件"),this);
+    inputData_lidar2path_now->setFrameStyle(QFrame::Panel|QFrame::Sunken);
+
     inputData_lidar2path_now->setEnabled(false);
     inputData_lidar1path_now->setEnabled(false);
     initial_extrinsic->setEnabled(false);
@@ -20,19 +41,29 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
     clear_data->setEnabled(false);
     write_calibfile->setEnabled(false);
 
+    data_offline->setChecked(true);
+
+
     // 是否加载了雷达1和雷达2
     have_lidar1 = false;
     have_lidar2 = false;
 
     // 主布局
-    QVBoxLayout *inputDatalayout = new QVBoxLayout(this);
+    inputDatalayout = new QVBoxLayout(this);
+    sourcelayout = new QHBoxLayout(this);
+    data_source = new QButtonGroup(this);
+    data_source->addButton(data_online,0);
+    data_source->addButton(data_offline,1);
+    sourcelayout->addWidget(data_online);
+    sourcelayout->addWidget(data_offline);
+    inputDatalayout->addLayout(sourcelayout);
     inputDatalayout->addWidget(inputData_lidar1);
     inputDatalayout->addWidget(inputData_lidar2);
     inputDatalayout->addWidget(initial_extrinsic);
     inputDatalayout->addWidget(draw_data);
     inputDatalayout->addWidget(clear_data);
     inputDatalayout->addWidget(write_calibfile);
-    QGridLayout *pathlayout = new QGridLayout(this);
+    pathlayout = new QGridLayout(this);
     pathlayout->addWidget(inputData_lidar1path,0,0);
     pathlayout->addWidget(inputData_lidar1path_now,0,1);
     pathlayout->addWidget(inputData_lidar2path,1,0);
@@ -43,10 +74,18 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
     connect(inputData_lidar1 , SIGNAL(clicked()) , this , SLOT(InputDataLidar1()) );
     connect(inputData_lidar2 , SIGNAL(clicked()) , this , SLOT(InputDataLidar2()) );
     connect(initial_extrinsic , SIGNAL(clicked()), this , SLOT(InitialExtrinsic()) );
-    connect(draw_data, SIGNAL(clicked()) , this , SLOT(DrawData()) );
+    connect(draw_data, SIGNAL(clicked()) , this , SLOT(DrawDataByButton()) );
     connect(clear_data, SIGNAL(clicked()) , this , SLOT(ClearData()) );
     connect(write_calibfile, SIGNAL(clicked()) , this , SLOT(WriteCalibFile()) );
     connect(this, SIGNAL(command_enablebutton()) , this , SLOT(EnableButton()) );
+
+
+    tmr1 = new QTimer(this);
+    connect(tmr1, SIGNAL(timeout()), this, SLOT(UpdateLidar1()));
+    connect(tmr1, SIGNAL(timeout()), this, SLOT(DrawDataByTimer()));
+    tmr2 = new QTimer(this);
+    connect(tmr2, SIGNAL(timeout()), this, SLOT(UpdateLidar2()));
+    connect(tmr2, SIGNAL(timeout()), this, SLOT(DrawDataByTimer()));
 }
 void InputDataWindow::InputDataLidar1(){
     // 按钮加载
@@ -56,27 +95,48 @@ void InputDataWindow::InputDataLidar1(){
 //    inputData_lidar1path_now->setEnabled(true);
 //    inputData_lidar1path_now->setText(path1.right(20));
 
-    // 固定路径
-    std::ifstream myfile_1((getenv("HOME") +path_lidar1).c_str());
-    inputData_lidar1path_now->setEnabled(true);
-    inputData_lidar1path_now->setText("lidar1.txt");
+    int data_id = data_source->checkedId();
+    data_online->setEnabled(false);
+    data_offline->setEnabled(false);
+    // 离线数据
+    if (data_id == 1){
 
+        // 固定路径
+        std::ifstream myfile_1((getenv("HOME") +path_lidar1).c_str());
+        inputData_lidar1path_now->setEnabled(true);
+        inputData_lidar1path_now->setText("lidar1.txt");
 
-    for(int i=0;i<1080;i++)
-    {
-        myfile_1>>lidar1_angle[i]>>lidar1_range[i];
-        range1.push_back(lidar1_range[i]);
+        for(int i=0;i<1080;i++)
+        {
+            myfile_1>>lidar1_angle[i]>>lidar1_range[i];
+            range1.push_back(lidar1_range[i]);
+        }
+        myfile_1.close();
+
+        inputData_lidar1->setEnabled(false);
+
+        emit SendData_lidar1(false, range1);
+        emit SendStatus_lidar1(false);
+
+        // 发送使能信号，会将整个窗口的按钮全部使能
+        have_lidar1 = true;
+        if (have_lidar1 == true && have_lidar2 == true){
+            emit command_enablebutton();
+        }
     }
-    myfile_1.close();
+    // 在线数据
+    if (data_id == 0){
+        range2.clear();
+        SendData_lidar2(true, range2);
 
-    inputData_lidar1->setEnabled(false);
+        tmr1->start(10);
+        emit SendStatus_lidar1(true);
 
-    emit SendData_lidar1(range1);
-
-    // 发送使能信号，会将整个窗口的按钮全部使能
-    have_lidar1 = true;
-    if (have_lidar1 == true && have_lidar2 == true){
-        emit command_enablebutton();
+        inputData_lidar1->setEnabled(false);
+        have_lidar1 = true;
+        if (have_lidar1 == true && have_lidar2 == true){
+            emit command_enablebutton();
+        }
     }
 }
 void InputDataWindow::InputDataLidar2(){
@@ -86,37 +146,83 @@ void InputDataWindow::InputDataLidar2(){
 //    inputData_lidar2path_now->setEnabled(true);
 //    inputData_lidar2path_now->setText(path2.right(20));
 
-    std::ifstream myfile_2((getenv("HOME") +path_lidar2).c_str());
-    inputData_lidar2path_now->setEnabled(true);
-    inputData_lidar2path_now->setText("lidar2.txt");
+    int data_id = data_source->checkedId();
+    data_online->setEnabled(false);
+    data_offline->setEnabled(false);
+    // 离线数据
+    if (data_id == 1){     
+        std::ifstream myfile_2((getenv("HOME") +path_lidar2).c_str());
+        inputData_lidar2path_now->setEnabled(true);
+        inputData_lidar2path_now->setText("lidar2.txt");
 
-    for(int i=0;i<1080;i++)
-    {
-        myfile_2>>lidar2_angle[i]>>lidar2_range[i];
-        range2.push_back(lidar2_range[i]);
+        for(int i=0;i<1080;i++)
+        {
+            myfile_2>>lidar2_angle[i]>>lidar2_range[i];
+            range2.push_back(lidar2_range[i]);
+        }
+        myfile_2.close();
+
+        inputData_lidar2->setEnabled(false);
+
+        emit SendData_lidar2(false, range2);
+        emit SendStatus_lidar2(false);
+
+        have_lidar2 = true;
+        if (have_lidar1 == true && have_lidar2 == true){
+            emit command_enablebutton();
+        }
     }
-    myfile_2.close();
+    // 在线数据
+    if (data_id == 0){
+        range1.clear();
+        SendData_lidar2(true, range1);
 
-    inputData_lidar2->setEnabled(false);
+        tmr2->start(10);
+        emit SendStatus_lidar2(true);
 
-    emit SendData_lidar2(range2);
-
-    have_lidar2 = true;
-    if (have_lidar1 == true && have_lidar2 == true){
-        emit command_enablebutton();
+        inputData_lidar2->setEnabled(false);
+        have_lidar2 = true;
+        if (have_lidar1 == true && have_lidar2 == true){
+            emit command_enablebutton();
+        }
     }
 }
+void InputDataWindow::ReceiveMessage_fromlidar1(commander_robot_msg::LaserScan *message){
+    range1_online= message->ranges();
+}
+void InputDataWindow::ReceiveMessage_fromlidar2(commander_robot_msg::LaserScan *message){
+    range2_online= message->ranges();
+}
+void InputDataWindow::UpdateLidar1(){
+
+    emit SendData_lidar1(true, range1_online);
+
+}
+void InputDataWindow::UpdateLidar2(){
+    emit SendData_lidar2(true, range2_online);
+
+}
+
 void InputDataWindow::InitialExtrinsic(){
     emit(command_initialExtrinsic());
 }
-void InputDataWindow::DrawData(){
-    emit command_draw();
+void InputDataWindow::DrawDataByButton(){
+    emit command_draw_byButton();
+}
+void InputDataWindow::DrawDataByTimer(){
+    emit command_draw_byTimer();
 }
 void InputDataWindow::ClearData(){
-    inputData_lidar1->setEnabled(true);
-    inputData_lidar2->setEnabled(true);
     range1.clear();
     range2.clear();
+
+    tmr1->stop();
+    tmr2->stop();
+
+    data_online->setEnabled(true);
+    data_offline->setEnabled(true);
+    inputData_lidar1->setEnabled(true);
+    inputData_lidar2->setEnabled(true);
 
     have_lidar1 = false;
     have_lidar2 = false;
@@ -125,17 +231,19 @@ void InputDataWindow::ClearData(){
     clear_data->setEnabled(false);
     inputData_lidar1path_now->setEnabled(false);
     inputData_lidar2path_now->setEnabled(false);
+    write_calibfile->setEnabled(false);
 
     emit(command_clear());
 }
 void InputDataWindow::WriteCalibFile(){
-
+    emit(command_writeCalibFile());
 }
 
 void InputDataWindow::EnableButton(){
     initial_extrinsic->setEnabled(true);
     draw_data->setEnabled(true);
     clear_data->setEnabled(true);
+    write_calibfile->setEnabled(true);
 }
 
 OperationWindow::OperationWindow(QWidget *parent):QWidget(parent){
@@ -143,6 +251,7 @@ OperationWindow::OperationWindow(QWidget *parent):QWidget(parent){
 
     command_record = new QTextBrowser(this);
     command_row = 0;
+
 
     lidar_show = new QButtonGroup(this);
     lidarAll_show = new QRadioButton(tr("显示全部雷达数据"),this);
@@ -394,13 +503,40 @@ void OperationWindow::DrawWhichLidar(){
         command_record->insertPlainText(tr("只显示雷达2图像，"));
     }
     command_record->moveCursor(QTextCursor::NextRow);
-    DrawData();
-}
 
+    DrawData("Button");
+}
+// 画图按钮被触发
+void OperationWindow::DrawDataByButton(){
+    DrawData("Button");
+}
+void OperationWindow::DrawDataByTimer(){
+    DrawData("Timer");
+}
 void OperationWindow::DrawData(){
-    command_row++;
-    command_record->insertPlainText(tr("画图\n"));
-    command_record->moveCursor(QTextCursor::NextRow);
+    int draw_id = lidar_show->checkedId();
+    double draw_increment1 = this->lidar1_increment_now->text().toDouble();
+    double draw_increment2 = this->lidar2_increment_now->text().toDouble();
+    double draw_x = this->extrinsic_x_now->text().toDouble();
+    double draw_y = this->extrinsic_y_now->text().toDouble();
+    double draw_theta = this->extrinsic_theta_now->text().toDouble();
+
+    if (draw_x!=0 && draw_y!= 0 && draw_theta!=0 && draw_increment1!= 0 && draw_increment2!=0 ){
+        emit command_draw("Button", draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
+    }
+    else{
+        command_row++;
+        command_record->insertPlainText(tr("无法画图！输入外参不合法\n"));
+        command_record->moveCursor(QTextCursor::NextRow);
+    }
+}
+void OperationWindow::DrawData(std::string way){
+    if (way == "Button"){
+        command_row++;
+        command_record->insertPlainText(tr("画图\n"));
+        command_record->moveCursor(QTextCursor::NextRow);
+    }
+
 
     int draw_id = lidar_show->checkedId();
     double draw_increment1 = this->lidar1_increment_now->text().toDouble();
@@ -410,12 +546,14 @@ void OperationWindow::DrawData(){
     double draw_theta = this->extrinsic_theta_now->text().toDouble();
 
     if (draw_x!=0 && draw_y!= 0 && draw_theta!=0 && draw_increment1!= 0 && draw_increment2!=0 ){
-        emit command_draw(draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
+        emit command_draw(way, draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
     }
     else{
-        command_row++;
-        command_record->insertPlainText(tr("无法画图！输入外参不合法\n"));
-        command_record->moveCursor(QTextCursor::NextRow);
+        if (way == "Button"){
+            command_row++;
+            command_record->insertPlainText(tr("无法画图！输入外参不合法\n"));
+            command_record->moveCursor(QTextCursor::NextRow);
+        }
     }
 }
 void OperationWindow::InitialExtrinsic(){
@@ -433,15 +571,81 @@ void OperationWindow::InitialExtrinsic(){
     dtheta_now->setText("0.1");
 }
 
-void OperationWindow::ReceiveInput_lidar1(){
+void OperationWindow::ReceiveStatus_lidar1(bool online){
     command_row++;
-    command_record->insertPlainText(tr("已加载雷达1的数据\n"));
+    if (online){
+        command_record->insertPlainText(tr("雷达1已连接\n"));
+    }
+    else{
+        command_record->insertPlainText(tr("已加载雷达1的数据\n"));
+    }
     command_record->moveCursor(QTextCursor::NextRow);
 }
-void OperationWindow::ReceiveInput_lidar2(){
+void OperationWindow::ReceiveStatus_lidar2(bool online){
     command_row++;
-    command_record->insertPlainText(tr("已加载雷达2的数据\n"));
+    if (online){
+        command_record->insertPlainText(tr("雷达2已连接\n"));
+    }
+    else{
+        command_record->insertPlainText(tr("已加载雷达1的数据\n"));
+    }
     command_record->moveCursor(QTextCursor::NextRow);
+}
+void OperationWindow::WriteCalibFile(){
+
+    double draw_increment1 = this->lidar1_increment_now->text().toDouble();
+    double draw_increment2 = this->lidar2_increment_now->text().toDouble();
+    double draw_x = this->extrinsic_x_now->text().toDouble();
+    double draw_y = this->extrinsic_y_now->text().toDouble();
+    double draw_theta = this->extrinsic_theta_now->text().toDouble();
+
+    if (draw_x!=0 && draw_y!= 0 && draw_theta!=0 && draw_increment1!= 0 && draw_increment2!=0 ){
+        command_row++;
+        command_record->insertPlainText(tr("正在向配置文件写入外参...\n"));
+        command_record->moveCursor(QTextCursor::NextRow);
+
+        FILE* fp_read = fopen((getenv("HOME")+path_calibFile_planner).c_str(), "r");
+
+        if (fp_read == NULL)
+        {
+            command_row++;
+            command_record->insertPlainText(tr("无模板文件！请检查路径...\n"));
+            command_record->moveCursor(QTextCursor::NextRow);
+        }
+        else{
+            char readBuffer[65536];
+            rapidjson::FileReadStream is(fp_read, readBuffer, sizeof(readBuffer));
+            rapidjson::Document doc;
+            doc.ParseStream(is);
+            fclose(fp_read);
+
+            rapidjson::Value& value_x = doc["extrinsic"]["extrinsic_laser2"][0];
+            rapidjson::Value& value_y = doc["extrinsic"]["extrinsic_laser2"][1];
+            rapidjson::Value& value_theta = doc["extrinsic"]["extrinsic_laser2"][2];
+            value_x.SetDouble(11.1);
+            value_y.SetDouble(22.2);
+            value_theta.SetDouble(33.3);
+
+            FILE* fp_write = fopen((getenv("HOME")+path_calibFile_planner).c_str(), "w");
+            // 创建rapidjson的writer
+            char writebuffer[65536];
+            rapidjson::FileWriteStream os(fp_write, writebuffer, sizeof(writebuffer));
+            rapidjson::PrettyWriter<rapidjson::FileWriteStream> writer(os);
+            // 将doc的更改写进json文件
+            doc.Accept(writer);
+            // 关闭json文件
+            fclose(fp_write);
+
+            command_row++;
+            command_record->insertPlainText(tr("外参文件已输出\n"));
+            command_record->moveCursor(QTextCursor::NextRow);
+        }
+    }
+    else{
+        command_row++;
+        command_record->insertPlainText(tr("无法输出外参文件，输入外参不合法！\n"));
+        command_record->moveCursor(QTextCursor::NextRow);
+    }
 }
 
 void OperationWindow::EnableButton(){
@@ -539,7 +743,7 @@ void OperationWindow::SetX(){
 }
 void OperationWindow::SubtractX(){
     command_row++;
-    command_record->insertPlainText(tr("X 方向减，"));
+    command_record->insertPlainText(tr("X 方向减\n"));
     command_record->moveCursor(QTextCursor::NextRow);
 
     double tmp = extrinsic_x_now->text().toDouble();
@@ -549,7 +753,7 @@ void OperationWindow::SubtractX(){
 }
 void OperationWindow::AddX(){
     command_row++;
-    command_record->insertPlainText(tr("X 方向加，"));
+    command_record->insertPlainText(tr("X 方向加\n"));
     command_record->moveCursor(QTextCursor::NextRow);
 
     double tmp = extrinsic_x_now->text().toDouble();
@@ -570,7 +774,7 @@ void OperationWindow::SetY(){
 }
 void OperationWindow::SubtractY(){
     command_row++;
-    command_record->insertPlainText(tr("Y 方向减，"));
+    command_record->insertPlainText(tr("Y 方向减\n"));
     command_record->moveCursor(QTextCursor::NextRow);
 
     double tmp = extrinsic_y_now->text().toDouble();
@@ -580,7 +784,7 @@ void OperationWindow::SubtractY(){
 }
 void OperationWindow::AddY(){
     command_row++;
-    command_record->insertPlainText(tr("Y 方向加，"));
+    command_record->insertPlainText(tr("Y 方向加\n"));
     command_record->moveCursor(QTextCursor::NextRow);
 
     double tmp = extrinsic_y_now->text().toDouble();
@@ -602,7 +806,7 @@ void OperationWindow::SetTheta(){
 }
 void OperationWindow::SubtractTheta(){
     command_row++;
-    command_record->insertPlainText(tr("Theta 角度减，"));
+    command_record->insertPlainText(tr("Theta 角度减\n"));
     command_record->moveCursor(QTextCursor::NextRow);
 
     double tmp = extrinsic_theta_now->text().toDouble();
@@ -612,7 +816,7 @@ void OperationWindow::SubtractTheta(){
 }
 void OperationWindow::AddTheta(){
     command_row++;
-    command_record->insertPlainText(tr("Theta 角度加，"));
+    command_record->insertPlainText(tr("Theta 角度加\n"));
     command_record->moveCursor(QTextCursor::NextRow);
 
     double tmp = extrinsic_theta_now->text().toDouble();
