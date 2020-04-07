@@ -46,16 +46,14 @@ public:
 
     bool have_lidar1;
     bool have_lidar2;
-<<<<<<< HEAD
-    std::string path_lidar1 = "/Desktop/LidarCalibrationGUI_qt/data/lidar1_data.txt";
-    std::string path_lidar2 = "/Desktop/LidarCalibrationGUI_qt/data/lidar2_data.txt";
-=======
-    std::string path_lidar1 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar1_data.txt";
-    std::string path_lidar2 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar2_data.txt";
->>>>>>> c4887806007d72a50a452d0a6341cac83bd6c1dc
 
-//    std::string path_lidar1 = "/yuchen/LidarCalibrationGUI_qt/data/lidar1_data.txt";
-//    std::string path_lidar2 = "/yuchen/LidarCalibrationGUI_qt/data/lidar2_data.txt";
+//    std::string path_lidar1 = "/Desktop/LidarCalibrationGUI_qt/data/lidar1_data.txt";
+//    std::string path_lidar2 = "/Desktop/LidarCalibrationGUI_qt/data/lidar2_data.txt";
+//    std::string path_lidar1 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar1_data.txt";
+//    std::string path_lidar2 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar2_data.txt";
+
+    std::string path_lidar1 = "/yuchen/LidarCalibrationGUI_qt/data/lidar1_data.txt";
+    std::string path_lidar2 = "/yuchen/LidarCalibrationGUI_qt/data/lidar2_data.txt";
 
     QHBoxLayout *sourcelayout;
     QButtonGroup *data_source;
