@@ -108,7 +108,7 @@ public:
     OperationWindow(QWidget *parent= 0);
 
     // std::string path_calibFile_SLAM = "/CodeBase/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
-    std::string path_calibFile_planner = "/CodeBase/LidarCalibrationGUI_qt/file/params2_robot.json";
+    std::string path_calibFile_planner = "/Desktop/LidarCalibrationGUI_qt/file/params2_robot.json";
 
     QVBoxLayout *operationlayout;
 
