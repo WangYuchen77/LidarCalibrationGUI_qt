@@ -31,7 +31,7 @@ CONFIG -= app_bundle
 #INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/
 #INCLUDEPATH += /usr/local/Cellar/opencv/4.1.2/include/opencv4/
 #LIBS += -L/usr/local/Cellar/opencv/4.1.2/lib/ -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs
-# Ubuntu
+## Ubuntu
 INCLUDEPATH += /usr/local/opencv/
 INCLUDEPATH += /usr/local/opencv/include
 INCLUDEPATH += /usr/local/include/fastrtps
