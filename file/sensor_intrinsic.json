@@ -1,0 +1,10 @@
+{
+    "scan_1": {
+        "angle_increment": 0.25,
+        "mount_type": "down"
+    },
+    "scan_2": {
+        "angle_increment": 0.25,
+        "mount_type": "down"
+    }
+}
