@@ -5,8 +5,8 @@
 ShowResultWidget::ShowResultWidget(QWidget *parent):QWidget(parent){
     // 显示区域
     mergePicture= new QLabel(tr("雷达数据标定后合并显示"),this);
-    // mergePicture->setFixedSize(800,800); // Mac use this params
-    mergePicture->setFixedSize(1050,1050); // Ubuntu use this
+    mergePicture->setFixedSize(800,800); // Mac use this params
+//    mergePicture->setFixedSize(1050,1050); // Ubuntu use this
 
     matrix_size = 2200; // opencv图像大小
     haveData1 = false;

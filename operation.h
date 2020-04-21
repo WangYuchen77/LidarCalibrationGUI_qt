@@ -11,6 +11,7 @@
 #include <QInputDialog>
 #include <QButtonGroup>
 #include <QRadioButton>
+#include <QComboBox>
 #include <QTimer>
 
 #include <math.h>
@@ -23,6 +24,9 @@
 #include "include/LaserScan.h"
 #include "include/LaserScanPubSubTypes.h"
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 
 class InputDataWindow: public QWidget{
@@ -47,10 +51,18 @@ public:
     bool have_lidar1;
     bool have_lidar2;
 
+
     std::string path_lidar1 = "/Desktop/LidarCalibrationGUI_qt/data/lidar1_data.txt";
     std::string path_lidar2 = "/Desktop/LidarCalibrationGUI_qt/data/lidar2_data.txt";
+//    std::string path_lidar1 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar1_data.txt";
+//    std::string path_lidar2 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar2_data.txt";
+
+//    std::string path_lidar1 = "/yuchen/LidarCalibrationGUI_qt/data/lidar1_data.txt";
+//    std::string path_lidar2 = "/yuchen/LidarCalibrationGUI_qt/data/lidar2_data.txt";
+
 
     QHBoxLayout *sourcelayout;
+    QComboBox *car_version;
     QButtonGroup *data_source;
     QRadioButton *data_online;
     QRadioButton *data_offline;
@@ -76,6 +88,7 @@ public:
 
 
 signals:
+    void UpdataCarVersion(int);
     void SendData_lidar1(bool, std::vector<float>);
     void SendData_lidar2(bool, std::vector<float>);
     void SendStatus_lidar1(bool);
@@ -89,6 +102,7 @@ signals:
     void command_writeCalibFile();
 
 private slots:
+    void slotCurrentIndexChanged(int);
     void UpdateLidar1();
     void UpdateLidar2();
     void InputDataLidar1();
@@ -108,7 +122,77 @@ public:
     OperationWindow(QWidget *parent= 0);
 
     // std::string path_calibFile_SLAM = "/CodeBase/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
-    std::string path_calibFile_planner = "/Desktop/LidarCalibrationGUI_qt/file/params2_robot.json";
+
+    std::string path_calibFile_extrinsic_planner = "/Desktop/LidarCalibrationGUI_qt/file/params2_ex.json";
+    std::string path_calibFile_extrinsic_slam = "/Desktop/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
+    std::string path_calibFile_intrinsic_slam = "/Desktop/LidarCalibrationGUI_qt/file/sensor_intrinsic.json";
+
+//    std::string path_calibFile_extrinsic_planner = "/CodeBase/LidarCalibrationGUI_qt/file/params2_ex.json";
+//    std::string path_calibFile_extrinsic_slam = "/CodeBase/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
+//    std::string path_calibFile_intrinsic_slam = "/CodeBase/LidarCalibrationGUI_qt/file/sensor_intrinsic.json";
+
+    std::string extrinsic_slam_content = "SENSOR_EXTRINSIC = {\n"\
+        "    imu_extrinsic = {\n"\
+        "        frame_id = \"imu\",\n"\
+        "        trans_x = 0.,\n"\
+        "        trans_y = 0.,\n"\
+        "        trans_z = 0.,\n"\
+        "        rotat_w = 1.,\n"\
+        "        rotat_x = 0.,\n"\
+        "        rotat_y = 0.,\n"\
+        "        rotat_z = 0.,\n"\
+        "    },\n"\
+        "    odom_extrinsic = {\n"\
+        "        frame_id = \"odom\",\n"\
+        "        trans_x = 0.,\n"\
+        "        trans_y = 0.,\n"\
+        "        trans_z = 0.,\n"\
+        "        rotat_w = 1.,\n"\
+        "        rotat_x = 0.,\n"\
+        "        rotat_y = 0.,\n"\
+        "        rotat_z = 0.,\n"\
+        "    },\n"\
+        "    scan_1_extrinsic = {\n"\
+        "        frame_id = \"scan_1\",\n"\
+        "        trans_x = %f,\n"\
+        "        trans_y = %f,\n"\
+        "        trans_z = 0.,\n"\
+        "        rotat_w = %f,\n"\
+        "        rotat_x = 0.,\n"\
+        "        rotat_y = 0.,\n"\
+        "        rotat_z = %f,\n"\
+        "    },\n"\
+        "    scan_2_extrinsic = {\n"\
+        "        frame_id = \"scan_2\",\n"\
+        "        trans_x = %f,\n"\
+        "        trans_y = %f,\n"\
+        "        trans_z = 0.,\n"\
+        "        rotat_w = %f,\n"\
+        "        rotat_x = 0.,\n"\
+        "        rotat_y = 0.,\n"\
+        "        rotat_z = %f,\n"\
+        "    },\n"\
+        "    camera_1_extrinsic = {\n"\
+        "        frame_id = \"camera_1\",\n"\
+        "        trans_x = 0.,\n"\
+        "        trans_y = 0.,\n"\
+        "        trans_z = 0.,\n"\
+        "        rotat_w = 1.,\n"\
+        "        rotat_x = 0.,\n"\
+        "        rotat_y = 0.,\n"\
+        "        rotat_z = 0.,\n"\
+        "    },\n"\
+    "}\n";
+
+    std::string intrinsic_slam_content = "{\n"\
+    "  \"scan_1\":{\"angle_increment\": %f, \"mount_type\": \"down\"},\n"\
+    "  \"scan_2\":{\"angle_increment\": %f, \"mount_type\": \"down\"}\n"\
+    "}";
+
+
+    double car_length;
+    double car_width;
+
 
     QVBoxLayout *operationlayout;
 
@@ -168,7 +252,7 @@ signals:
     void command_draw(std::string, double, double, double, double, double, double);
     void command_resetPicture();
 private slots:
-
+    void ReceiveStatus_carVersion(int);
     void ReceiveStatus_lidar1(bool);
     void ReceiveStatus_lidar2(bool);
     void InitialExtrinsic();
