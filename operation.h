@@ -121,10 +121,12 @@ class OperationWindow: public QWidget{
 public:
     OperationWindow(QWidget *parent= 0);
 
-    // std::string path_calibFile_SLAM = "/CodeBase/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
-    std::string path_calibFile_extrinsic_planner = "/CodeBase/LidarCalibrationGUI_qt/file/params2_ex.json";
-    std::string path_calibFile_extrinsic_slam = "/CodeBase/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
-    std::string path_calibFile_intrinsic_slam = "/CodeBase/LidarCalibrationGUI_qt/file/sensor_intrinsic.json";
+    // std::string path_calibFile_extrinsic_planner = "/CodeBase/LidarCalibrationGUI_qt/file/params2_ex.json";
+    // std::string path_calibFile_extrinsic_slam = "/CodeBase/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
+    // std::string path_calibFile_intrinsic_slam = "/CodeBase/LidarCalibrationGUI_qt/file/sensor_intrinsic.json";
+    std::string path_calibFile_extrinsic_planner = "/yuchen/LidarCalibrationGUI_qt/file/params2_ex.json";
+    std::string path_calibFile_extrinsic_slam = "/yuchen/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
+    std::string path_calibFile_intrinsic_slam = "/yuchen/LidarCalibrationGUI_qt/file/sensor_intrinsic.json";
 
     std::string extrinsic_slam_content = "SENSOR_EXTRINSIC = {\n"\
         "    imu_extrinsic = {\n"\
