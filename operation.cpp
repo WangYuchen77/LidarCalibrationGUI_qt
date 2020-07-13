@@ -24,6 +24,7 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
     car_version->addItem("JE-300",1);
     car_version->addItem("JE-600",2);
     car_version->addItem("JE-1200",3);
+    car_version->addItem("JE-100抗磁型",4);
 
     data_online = new QRadioButton(tr("在线"),this);
     data_offline = new QRadioButton(tr("离线"),this);
@@ -604,6 +605,11 @@ void OperationWindow::ReceiveStatus_carVersion(int version){
     case 3:
         car_length = 0.7573;
         car_width = 0.4953;
+        break;
+    // JE-100抗磁型
+    case 4:
+        car_length = 0.8533;
+        car_width = 0.5181;
         break;
     }
 }
