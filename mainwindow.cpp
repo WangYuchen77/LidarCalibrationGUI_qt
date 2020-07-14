@@ -83,8 +83,8 @@ MainwindowWidget::MainwindowWidget(QWidget *parent):QWidget(parent){
 
     // OperationWindow to ShowResultWindow
     // 画图是由operationWindow向ShowResultWindow发出的命令
-    connect(operationW, SIGNAL(command_draw(std::string, double, double, double, double, double, double)),
-            showResultW , SLOT(draw(std::string, double, double, double, double, double, double)) );
+    connect(operationW, SIGNAL(command_draw(std::string, std::string, double, double, double, double, double, double)),
+            showResultW , SLOT(draw(std::string, std::string, double, double, double, double, double, double)) );
 
 }
 //void MainwindowWidget::wheelEvent(QWheelEvent *event)
