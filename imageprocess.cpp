@@ -5,8 +5,8 @@
 ShowResultWidget::ShowResultWidget(QWidget *parent):QWidget(parent){
     // 显示区域
     mergePicture= new QLabel(tr("雷达数据标定后合并显示"),this);
-    // mergePicture->setFixedSize(800,800); // Mac use this params
-    mergePicture->setFixedSize(1050,1050); // Ubuntu use this
+    mergePicture->setFixedSize(800,800); // Mac use this params
+//    mergePicture->setFixedSize(1050,1050); // Ubuntu use this
 
     matrix_size = 2200; // opencv图像大小
     haveData1 = false;
@@ -81,8 +81,10 @@ void ShowResultWidget::ReceiveData_lidar2(bool online, std::vector<float> range2
     haveData2 = true;
     isDataOnline = online;
 }
+// IMPORTANT
 // 画图核心代码
-void ShowResultWidget::draw(std::string way, double show_id, double increment1, double increment2, double angle, double extrin_x, double extrin_y){
+// 参数代表（ way:按钮触发/时钟触发，install_way:雷达安装方式正装/倒装， show_id:显示雷达1+2/雷达1/雷达2的数据, 雷达1和雷达2的内外参数）
+void ShowResultWidget::draw(std::string way, std::string install_way, double show_id, double increment1, double increment2, double angle, double extrin_x, double extrin_y){
 
 //    std::cout<<increment1<<std::endl;
 //    std::cout<<increment2<<std::endl;
@@ -93,16 +95,32 @@ void ShowResultWidget::draw(std::string way, double show_id, double increment1, 
 //    std::cout<<"pointcloud 1 size:"<<pointCloudSize_lidar1<<std::endl;
     for (int i = 0 ; i < pointCloudSize_lidar1 ; i++){
         if (abs(range1[i]) < 20){
-            xList_1.append(range1[i]*cos(double(-135 + increment1 * i)/180*CV_PI));
-            yList_1.append(range1[i]*sin(double(-135 + increment1 * i)/180*CV_PI));
+            if (install_way == "up")
+            {
+                xList_1.append(range1[i]*cos(double(-135 + increment1 * i)/180*CV_PI));
+                yList_1.append(range1[i]*sin(double(-135 + increment1 * i)/180*CV_PI));
+            }
+            if (install_way == "down")
+            {
+                xList_1.append(range1[i]*cos(double(135 - increment1 * (pointCloudSize_lidar1-1 - i))/180*CV_PI));
+                yList_1.append(range1[i]*sin(double(135 - increment1 * (pointCloudSize_lidar1-1 - i))/180*CV_PI));
+            }
         }
     }
     int pointCloudSize_lidar2 = range2.size();
 //    std::cout<<"pointcloud 2 size:"<<pointCloudSize_lidar2<<std::endl;
     for (int i = 0 ; i < pointCloudSize_lidar2 ; i++){
         if (abs(range2[i]) < 20){
-            xList_2.append(range2[i]*cos((-135 + increment2 * i)/180*CV_PI));
-            yList_2.append(range2[i]*sin((-135 + increment2 * i)/180*CV_PI));
+            if (install_way == "up")
+            {
+                xList_2.append(range2[i]*cos(double(-135 + increment2 * i)/180*CV_PI));
+                yList_2.append(range2[i]*sin(double(-135 + increment2 * i)/180*CV_PI));
+            }
+            if (install_way == "down")
+            {
+                xList_2.append(range2[i]*cos(double(135 - increment2 * (pointCloudSize_lidar2-1 - i))/180*CV_PI));
+                yList_2.append(range2[i]*sin(double(135 - increment2 * (pointCloudSize_lidar2-1 - i))/180*CV_PI));
+            }
         }
     }
     update();
@@ -158,29 +176,6 @@ void ShowResultWidget::draw(std::string way, double show_id, double increment1, 
 
 //    image_show = image;
     image_show = image.clone();
-
-
-
-//    cv::Rect rect(50,20, 1500, 500);
-//    cv::Mat image = image1(rect);
-
-
-//    cv::Mat image = image(cv::Range(500,1500),cv::Range(500,1500));
-
-//    std::cout<<image.cols<<std::endl;
-//    std::cout<<image.rows<<std::endl;
-
-
-//    cv::Mat dst = cv::Mat::zeros(300, 300, CV_8UC3);
-//    cv::resize(image,image, dst.size());
-
-
-//    std::string imageName( "/Users/admin/Desktop/map.png" ); // 改成你想要的图片
-//    image = cv::imread( imageName, cv::IMREAD_COLOR ); // Read the file
-//    if( image.empty() )                      // Check for invalid input
-//    {
-//        std::cout <<  "Could not open or find the image" << std::endl ;
-//    }
 
     cv::Mat imageAddAxes = AddAxes(image);
     QImage img;
@@ -244,8 +239,6 @@ void ShowResultWidget::draw(std::string way, double show_id, double increment1, 
         mergePicture->setScaledContents(true);
         mergePicture->setPixmap(QPixmap::fromImage(img));
     }
-
-
 
 
     // 暂时不知道，为啥得把正常的BGR换到RGB，放大缩小那些功能才能显示正常颜色

@@ -21,8 +21,8 @@ SENSOR_EXTRINSIC = {
     },
     scan_1_extrinsic = {
         frame_id = "scan_1",
-        trans_x = 0.378650,
-        trans_y = -0.247650,
+        trans_x = 0.567700,
+        trans_y = -0.387550,
         trans_z = 0.,
         rotat_w = 0.923880,
         rotat_x = 0.,
@@ -31,8 +31,8 @@ SENSOR_EXTRINSIC = {
     },
     scan_2_extrinsic = {
         frame_id = "scan_2",
-        trans_x = -0.385025,
-        trans_y = 0.261467,
+        trans_x = -0.195975,
+        trans_y = 0.121567,
         trans_z = 0.,
         rotat_w = -0.382683,
         rotat_x = 0.,

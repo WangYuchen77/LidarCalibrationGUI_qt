@@ -12,9 +12,9 @@
 
 std::vector<float> range1_online;
 std::vector<float> range2_online;
-InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
 
-
+InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent)
+{
     mParticipant.Create("calib",101);
     subscriber_lidar1.Create(mParticipant, "scan_1", 1, InputDataWindow::ReceiveMessage_fromlidar1);
     subscriber_lidar2.Create(mParticipant, "scan_2", 1, InputDataWindow::ReceiveMessage_fromlidar2);
@@ -24,6 +24,9 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
     car_version->addItem("JE-300",1);
     car_version->addItem("JE-600",2);
     car_version->addItem("JE-1200",3);
+    car_version->addItem("JE-100抗磁型",4);
+    car_version->addItem("JE-200U",5);
+    car_version->addItem("JE-800U",6);
 
     data_online = new QRadioButton(tr("在线"),this);
     data_offline = new QRadioButton(tr("离线"),this);
@@ -98,7 +101,8 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
 void InputDataWindow::slotCurrentIndexChanged(int id){
     emit UpdataCarVersion(id);
 }
-void InputDataWindow::InputDataLidar1(){
+void InputDataWindow::InputDataLidar1()
+{
     // 按钮加载
 //    QString path1 = QFileDialog::getOpenFileName(this,"open","../","TXT(*.txt)");
 //    std::string file1 = path1.toStdString();
@@ -137,8 +141,8 @@ void InputDataWindow::InputDataLidar1(){
     }
     // 在线数据
     if (data_id == 0){
-        range2.clear();
-        SendData_lidar2(true, range2);
+        range1.clear();
+        SendData_lidar1(true, range1);
 
         tmr1->start(10);
         emit SendStatus_lidar1(true);
@@ -185,8 +189,8 @@ void InputDataWindow::InputDataLidar2(){
     }
     // 在线数据
     if (data_id == 0){
-        range1.clear();
-        SendData_lidar2(true, range1);
+        range2.clear();
+        SendData_lidar2(true, range2);
 
         tmr2->start(10);
         emit SendStatus_lidar2(true);
@@ -535,7 +539,7 @@ void OperationWindow::DrawData(){
     double draw_theta = this->extrinsic_theta_now->text().toDouble();
 
     if (draw_x!=0 && draw_y!= 0 && draw_theta!=0 && draw_increment1!= 0 && draw_increment2!=0 ){
-        emit command_draw("Button", draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
+        emit command_draw("Button", lidar_installWay, draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
     }
     else{
         command_row++;
@@ -559,7 +563,7 @@ void OperationWindow::DrawData(std::string way){
     double draw_theta = this->extrinsic_theta_now->text().toDouble();
 
     if (draw_x!=0 && draw_y!= 0 && draw_theta!=0 && draw_increment1!= 0 && draw_increment2!=0 ){
-        emit command_draw(way, draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
+        emit command_draw(way, lidar_installWay, draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
     }
     else{
         if (way == "Button"){
@@ -578,32 +582,55 @@ void OperationWindow::InitialExtrinsic(){
     lidar2_increment_now->setText("0.25");
     extrinsic_x_now->setText("-0.90");
     extrinsic_y_now->setText("-0.18");
-    extrinsic_theta_now->setText("180.0");
+    extrinsic_theta_now->setText("-180.0");
     dx_now->setText("0.01");
     dy_now->setText("0.01");
     dtheta_now->setText("0.1");
 }
 void OperationWindow::ReceiveStatus_carVersion(int version){
+    car_version = version;
     switch (version) {
     // JE-100
     case 0:
         car_length = 0.7573;
         car_width = 0.4953;
+        lidar_installWay = "down";
         break;
     // JE-300
     case 1:
         car_length = 0.7573;
         car_width = 0.4953;
+        lidar_installWay = "down";
         break;
     // JE-600
     case 2:
         car_length = 1.1354;
         car_width = 0.7751;
+        lidar_installWay = "up";
         break;
     // JE-1200
     case 3:
         car_length = 0.7573;
         car_width = 0.4953;
+        lidar_installWay = "down";
+        break;
+    // JE-100抗磁型
+    case 4:
+        car_length = 0.8533;
+        car_width = 0.5181;
+        lidar_installWay = "down";
+        break;
+    // JE-200U
+    case 5:
+        car_length = 1.26686;
+        car_width = 0.85186;
+        lidar_installWay = "down";
+        break;
+    // JE-800U
+    case 6:
+        car_length = 1.26686;
+        car_width = 0.85186;
+        lidar_installWay = "down";
         break;
     }
 }
@@ -740,6 +767,20 @@ void OperationWindow::WriteCalibFile(){
 
             value_increment1.SetDouble(draw_increment1);
             value_increment2.SetDouble(draw_increment2);
+
+            rapidjson::Value& value_installway1 = doc1["scan_1"]["mount_type"];
+            rapidjson::Value& value_installway2 = doc1["scan_2"]["mount_type"];
+
+            if (lidar_installWay == "up")
+            {
+                value_installway1.SetString("up");
+                value_installway2.SetString("up");
+            }
+            else
+            {
+                value_installway1.SetString("down");
+                value_installway2.SetString("down");
+            }
 
             FILE* fp_write_intrinsic_slam = fopen((getenv("HOME")+path_calibFile_intrinsic_slam).c_str(), "w");
             // 创建rapidjson的writer

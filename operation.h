@@ -52,21 +52,21 @@ public:
     bool have_lidar2;
 
 
-//    std::string path_lidar1 = "/Desktop/LidarCalibrationGUI_qt/data/lidar1_data.txt";
-//    std::string path_lidar2 = "/Desktop/LidarCalibrationGUI_qt/data/lidar2_data.txt";
+    std::string path_lidar1 = "/Desktop/LidarCalibrationGUI_qt/data/lidar1_data.txt";
+    std::string path_lidar2 = "/Desktop/LidarCalibrationGUI_qt/data/lidar2_data.txt";
 //    std::string path_lidar1 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar1_data.txt";
 //    std::string path_lidar2 = "/CodeBase/LidarCalibrationGUI_qt/data/lidar2_data.txt";
 
-    std::string path_lidar1 = "/yuchen/LidarCalibrationGUI_qt/data/lidar1_data.txt";
-    std::string path_lidar2 = "/yuchen/LidarCalibrationGUI_qt/data/lidar2_data.txt";
+//    std::string path_lidar1 = "/yuchen/LidarCalibrationGUI_qt/data/lidar1_data.txt";
+//    std::string path_lidar2 = "/yuchen/LidarCalibrationGUI_qt/data/lidar2_data.txt";
 
 
+    // 控件部分
     QHBoxLayout *sourcelayout;
     QComboBox *car_version;
     QButtonGroup *data_source;
     QRadioButton *data_online;
     QRadioButton *data_offline;
-
 
     QVBoxLayout *inputDatalayout;
     QPushButton *inputData_lidar1;
@@ -84,8 +84,6 @@ public:
 
     static void ReceiveMessage_fromlidar1(commander_robot_msg::LaserScan *message);
     static void ReceiveMessage_fromlidar2(commander_robot_msg::LaserScan *message);
-
-
 
 signals:
     void UpdataCarVersion(int);
@@ -121,12 +119,10 @@ class OperationWindow: public QWidget{
 public:
     OperationWindow(QWidget *parent= 0);
 
-    // std::string path_calibFile_extrinsic_planner = "/CodeBase/LidarCalibrationGUI_qt/file/params2_ex.json";
-    // std::string path_calibFile_extrinsic_slam = "/CodeBase/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
-    // std::string path_calibFile_intrinsic_slam = "/CodeBase/LidarCalibrationGUI_qt/file/sensor_intrinsic.json";
-    std::string path_calibFile_extrinsic_planner = "/yuchen/LidarCalibrationGUI_qt/file/params2_ex.json";
-    std::string path_calibFile_extrinsic_slam = "/yuchen/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
-    std::string path_calibFile_intrinsic_slam = "/yuchen/LidarCalibrationGUI_qt/file/sensor_intrinsic.json";
+    std::string path_calibFile_extrinsic_planner = "/commander/tools/LidarCalibrationGUI_qt/file/params2_ex.json";
+    std::string path_calibFile_extrinsic_slam = "/commander/tools/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
+    std::string path_calibFile_intrinsic_slam = "/commander/tools/LidarCalibrationGUI_qt/file/sensor_intrinsic.json";
+
 
     std::string extrinsic_slam_content = "SENSOR_EXTRINSIC = {\n"\
         "    imu_extrinsic = {\n"\
@@ -182,19 +178,19 @@ public:
     "}\n";
 
     std::string intrinsic_slam_content = "{\n"\
-    "  \"scan_1\":{\"angle_increment\": %f, \"mount_type\": \"down\"},\n"\
-    "  \"scan_2\":{\"angle_increment\": %f, \"mount_type\": \"down\"}\n"\
+    "  \"scan_1\":{\"angle_increment\": %f, \"mount_type\": %s },\n"\
+    "  \"scan_2\":{\"angle_increment\": %f, \"mount_type\": %s }\n"\
     "}";
 
+    int car_version; // 车型
+    std::string lidar_installWay; // 雷达的安装方式
+    double car_length; // 雷达在车长方向的距离
+    double car_width; // 雷达在车宽方向的距离
 
-    double car_length;
-    double car_width;
-
+    // 控件部分
     QVBoxLayout *operationlayout;
-
     QTextBrowser *command_record;
     int command_row;
-
 
     QButtonGroup *lidar_show;
     QRadioButton *lidarAll_show;
@@ -207,7 +203,6 @@ public:
     QLabel *lidar2_increment;
     QLabel *lidar2_increment_now;
     QPushButton *lidar2_increment_set;
-
 
     QLabel *extrinsic_x;
     QLabel *extrinsic_x_now;
@@ -245,7 +240,7 @@ public:
     QPushButton *dtheta_subtract;
     QPushButton *dtheta_add;
 signals:
-    void command_draw(std::string, double, double, double, double, double, double);
+    void command_draw(std::string, std::string, double, double, double, double, double, double);
     void command_resetPicture();
 private slots:
     void ReceiveStatus_carVersion(int);
