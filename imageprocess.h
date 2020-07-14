@@ -23,6 +23,8 @@ class ShowResultWidget : public QWidget
 {
     Q_OBJECT
 public:
+    ShowResultWidget(QWidget *parent=0);
+
     enum  Type {
         None          = 0,
         Amplification ,
@@ -32,8 +34,8 @@ public:
         Up,
         Down,
         Move
-    };
-    ShowResultWidget(QWidget *parent=0);
+    }; // 操作的枚举类型
+
     int m_count;
     float x;
     QTimer* m_Timer;
@@ -85,7 +87,6 @@ private :
     bool isDataOnline;
     bool isReset;
 
-
     bool event(QEvent * event);
     void wheelEvent(QWheelEvent* e);     //鼠标滑轮事件
 
@@ -94,14 +95,16 @@ private :
 
 private slots:
 
-    void ReceiveData_lidar1(bool, std::vector<float> range1);
-    void ReceiveData_lidar2(bool, std::vector<float> range2);
-    void draw(std::string, double, double, double, double, double, double);
-    void ClearImage();
+    void ReceiveData_lidar1(bool, std::vector<float> range1); // 接受雷达1数据
+    void ReceiveData_lidar2(bool, std::vector<float> range2); // 接受雷达2数据
+    void draw(std::string, std::string, double, double, double, double, double, double); // 画图操作
+    void ClearImage(); // 清除图像
 
+    // 图像界面的按钮使能与失能
     void EnableButton();
     void DisableButton();
 
+    // 图像操作按钮的触发函数
     void onUpClicked();
     void onDownClicked();
     void OnLeftClicked();

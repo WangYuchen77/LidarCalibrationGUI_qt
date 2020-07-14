@@ -62,6 +62,8 @@ MainwindowWidget::MainwindowWidget(QWidget *parent):QWidget(parent){
 
     // InputDataWindow to OperationWindow
     // 接受雷达数据
+    connect(inputDataW, SIGNAL(UpdataCarVersion(int)),
+                operationW , SLOT(ReceiveStatus_carVersion(int)) );
     connect(inputDataW, SIGNAL(SendStatus_lidar1(bool)),
                 operationW , SLOT(ReceiveStatus_lidar1(bool)) );
     connect(inputDataW, SIGNAL(SendStatus_lidar2(bool)),
@@ -81,8 +83,8 @@ MainwindowWidget::MainwindowWidget(QWidget *parent):QWidget(parent){
 
     // OperationWindow to ShowResultWindow
     // 画图是由operationWindow向ShowResultWindow发出的命令
-    connect(operationW, SIGNAL(command_draw(std::string, double, double, double, double, double, double)),
-            showResultW , SLOT(draw(std::string, double, double, double, double, double, double)) );
+    connect(operationW, SIGNAL(command_draw(std::string, std::string, double, double, double, double, double, double)),
+            showResultW , SLOT(draw(std::string, std::string, double, double, double, double, double, double)) );
 
 }
 //void MainwindowWidget::wheelEvent(QWheelEvent *event)

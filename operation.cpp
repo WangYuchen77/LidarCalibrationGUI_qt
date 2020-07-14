@@ -12,12 +12,21 @@
 
 std::vector<float> range1_online;
 std::vector<float> range2_online;
-InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
 
-
+InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent)
+{
     mParticipant.Create("calib",101);
     subscriber_lidar1.Create(mParticipant, "scan_1", 1, InputDataWindow::ReceiveMessage_fromlidar1);
     subscriber_lidar2.Create(mParticipant, "scan_2", 1, InputDataWindow::ReceiveMessage_fromlidar2);
+
+    car_version = new QComboBox(this);
+    car_version->addItem("JE-100",0);
+    car_version->addItem("JE-300",1);
+    car_version->addItem("JE-600",2);
+    car_version->addItem("JE-1200",3);
+    car_version->addItem("JE-100抗磁型",4);
+    car_version->addItem("JE-200U",5);
+    car_version->addItem("JE-800U",6);
 
     data_online = new QRadioButton(tr("在线"),this);
     data_offline = new QRadioButton(tr("离线"),this);
@@ -54,6 +63,7 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
     data_source = new QButtonGroup(this);
     data_source->addButton(data_online,0);
     data_source->addButton(data_offline,1);
+    sourcelayout->addWidget(car_version);
     sourcelayout->addWidget(data_online);
     sourcelayout->addWidget(data_offline);
     inputDatalayout->addLayout(sourcelayout);
@@ -71,6 +81,7 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
     inputDatalayout->addLayout(pathlayout);
 
 
+    connect(car_version , SIGNAL(currentIndexChanged(int)) , this , SLOT(slotCurrentIndexChanged(int)) );
     connect(inputData_lidar1 , SIGNAL(clicked()) , this , SLOT(InputDataLidar1()) );
     connect(inputData_lidar2 , SIGNAL(clicked()) , this , SLOT(InputDataLidar2()) );
     connect(initial_extrinsic , SIGNAL(clicked()), this , SLOT(InitialExtrinsic()) );
@@ -87,7 +98,11 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent){
     connect(tmr2, SIGNAL(timeout()), this, SLOT(UpdateLidar2()));
     connect(tmr2, SIGNAL(timeout()), this, SLOT(DrawDataByTimer()));
 }
-void InputDataWindow::InputDataLidar1(){
+void InputDataWindow::slotCurrentIndexChanged(int id){
+    emit UpdataCarVersion(id);
+}
+void InputDataWindow::InputDataLidar1()
+{
     // 按钮加载
 //    QString path1 = QFileDialog::getOpenFileName(this,"open","../","TXT(*.txt)");
 //    std::string file1 = path1.toStdString();
@@ -126,8 +141,8 @@ void InputDataWindow::InputDataLidar1(){
     }
     // 在线数据
     if (data_id == 0){
-        range2.clear();
-        SendData_lidar2(true, range2);
+        range1.clear();
+        SendData_lidar1(true, range1);
 
         tmr1->start(10);
         emit SendStatus_lidar1(true);
@@ -174,8 +189,8 @@ void InputDataWindow::InputDataLidar2(){
     }
     // 在线数据
     if (data_id == 0){
-        range1.clear();
-        SendData_lidar2(true, range1);
+        range2.clear();
+        SendData_lidar2(true, range2);
 
         tmr2->start(10);
         emit SendStatus_lidar2(true);
@@ -236,6 +251,8 @@ void InputDataWindow::ClearData(){
     emit(command_clear());
 }
 void InputDataWindow::WriteCalibFile(){
+    int version = car_version->currentIndex();
+    emit UpdataCarVersion(version);
     emit(command_writeCalibFile());
 }
 
@@ -522,7 +539,7 @@ void OperationWindow::DrawData(){
     double draw_theta = this->extrinsic_theta_now->text().toDouble();
 
     if (draw_x!=0 && draw_y!= 0 && draw_theta!=0 && draw_increment1!= 0 && draw_increment2!=0 ){
-        emit command_draw("Button", draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
+        emit command_draw("Button", lidar_installWay, draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
     }
     else{
         command_row++;
@@ -546,7 +563,7 @@ void OperationWindow::DrawData(std::string way){
     double draw_theta = this->extrinsic_theta_now->text().toDouble();
 
     if (draw_x!=0 && draw_y!= 0 && draw_theta!=0 && draw_increment1!= 0 && draw_increment2!=0 ){
-        emit command_draw(way, draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
+        emit command_draw(way, lidar_installWay, draw_id, draw_increment1, draw_increment2, draw_theta, draw_x, draw_y);
     }
     else{
         if (way == "Button"){
@@ -565,12 +582,58 @@ void OperationWindow::InitialExtrinsic(){
     lidar2_increment_now->setText("0.25");
     extrinsic_x_now->setText("-0.90");
     extrinsic_y_now->setText("-0.18");
-    extrinsic_theta_now->setText("180.0");
+    extrinsic_theta_now->setText("-180.0");
     dx_now->setText("0.01");
     dy_now->setText("0.01");
     dtheta_now->setText("0.1");
 }
-
+void OperationWindow::ReceiveStatus_carVersion(int version){
+    car_version = version;
+    switch (version) {
+    // JE-100
+    case 0:
+        car_length = 0.7573;
+        car_width = 0.4953;
+        lidar_installWay = "down";
+        break;
+    // JE-300
+    case 1:
+        car_length = 0.7573;
+        car_width = 0.4953;
+        lidar_installWay = "down";
+        break;
+    // JE-600
+    case 2:
+        car_length = 1.1354;
+        car_width = 0.7751;
+        lidar_installWay = "up";
+        break;
+    // JE-1200
+    case 3:
+        car_length = 0.7573;
+        car_width = 0.4953;
+        lidar_installWay = "down";
+        break;
+    // JE-100抗磁型
+    case 4:
+        car_length = 0.8533;
+        car_width = 0.5181;
+        lidar_installWay = "down";
+        break;
+    // JE-200U
+    case 5:
+        car_length = 1.26686;
+        car_width = 0.85186;
+        lidar_installWay = "down";
+        break;
+    // JE-800U
+    case 6:
+        car_length = 1.26686;
+        car_width = 0.85186;
+        lidar_installWay = "down";
+        break;
+    }
+}
 void OperationWindow::ReceiveStatus_lidar1(bool online){
     command_row++;
     if (online){
@@ -601,40 +664,133 @@ void OperationWindow::WriteCalibFile(){
 
     if (draw_x!=0 && draw_y!= 0 && draw_theta!=0 && draw_increment1!= 0 && draw_increment2!=0 ){
         command_row++;
-        command_record->insertPlainText(tr("正在向配置文件写入外参...\n"));
+        command_record->insertPlainText(tr("正在向配置文件写入参数...\n"));
         command_record->moveCursor(QTextCursor::NextRow);
 
-        FILE* fp_read = fopen((getenv("HOME")+path_calibFile_planner).c_str(), "r");
+        FILE* fp_read_extrinsic_planner = fopen((getenv("HOME")+path_calibFile_extrinsic_planner).c_str(), "r");
+        FILE* fp_read_extrinsic_slam = fopen((getenv("HOME")+path_calibFile_extrinsic_slam).c_str(), "r");
+        FILE* fp_read_intrinsic_slam = fopen((getenv("HOME")+path_calibFile_intrinsic_slam).c_str(), "r");
 
-        if (fp_read == NULL)
+        if (fp_read_extrinsic_planner==NULL || fp_read_extrinsic_slam==NULL || fp_read_intrinsic_slam==NULL)
         {
             command_row++;
             command_record->insertPlainText(tr("无模板文件！请检查路径...\n"));
             command_record->moveCursor(QTextCursor::NextRow);
         }
         else{
+            double lidar1_x = car_length/2;
+            double lidar1_y = - car_width/2;
+            double lidar1_theta = -45.0/180*CV_PI;
+            double lidar2_x = cos(lidar1_theta)*draw_x-sin(lidar1_theta)*draw_y+lidar1_x;
+            double lidar2_y = sin(lidar1_theta)*draw_x+cos(lidar1_theta)*draw_y+lidar1_y;
+            double lidar2_theta = (360-45+draw_theta)/180*CV_PI;
+
+            // 填写planner参数
             char readBuffer[65536];
-            rapidjson::FileReadStream is(fp_read, readBuffer, sizeof(readBuffer));
+            rapidjson::FileReadStream is(fp_read_extrinsic_planner, readBuffer, sizeof(readBuffer));
             rapidjson::Document doc;
             doc.ParseStream(is);
-            fclose(fp_read);
+            fclose(fp_read_extrinsic_planner);
 
-            rapidjson::Value& value_x = doc["extrinsic"]["extrinsic_laser2"][0];
-            rapidjson::Value& value_y = doc["extrinsic"]["extrinsic_laser2"][1];
-            rapidjson::Value& value_theta = doc["extrinsic"]["extrinsic_laser2"][2];
-            value_x.SetDouble(11.1);
-            value_y.SetDouble(22.2);
-            value_theta.SetDouble(33.3);
+            rapidjson::Value& value_x_1 = doc["extrinsic_laser1"][0];
+            rapidjson::Value& value_y_1 = doc["extrinsic_laser1"][1];
+            rapidjson::Value& value_theta_1 = doc["extrinsic_laser1"][2];
+            rapidjson::Value& value_x_2 = doc["extrinsic_laser2"][0];
+            rapidjson::Value& value_y_2 = doc["extrinsic_laser2"][1];
+            rapidjson::Value& value_theta_2 = doc["extrinsic_laser2"][2];
+            value_x_1.SetDouble(round(lidar1_x*1000000)/1000000);
+            value_y_1.SetDouble(round(lidar1_y*1000000)/1000000);
+            value_theta_1.SetDouble(round(-lidar1_theta*1000000)/1000000);
+            value_x_2.SetDouble(round(lidar2_x*1000000)/1000000);
+            value_y_2.SetDouble(round(lidar2_y*1000000)/1000000);
+            value_theta_2.SetDouble(round((45+draw_theta)/180*CV_PI*1000000)/1000000);
 
-            FILE* fp_write = fopen((getenv("HOME")+path_calibFile_planner).c_str(), "w");
+            FILE* fp_write_extrinsic_planner = fopen((getenv("HOME")+path_calibFile_extrinsic_planner).c_str(), "w");
             // 创建rapidjson的writer
             char writebuffer[65536];
-            rapidjson::FileWriteStream os(fp_write, writebuffer, sizeof(writebuffer));
+            rapidjson::FileWriteStream os(fp_write_extrinsic_planner, writebuffer, sizeof(writebuffer));
             rapidjson::PrettyWriter<rapidjson::FileWriteStream> writer(os);
             // 将doc的更改写进json文件
             doc.Accept(writer);
             // 关闭json文件
-            fclose(fp_write);
+            fclose(fp_write_extrinsic_planner);
+
+
+            // 填写slam外参数
+            char buf[2000]={0};
+            fread(buf, 1, 2000, fp_read_extrinsic_slam);
+
+            float lidar1_trans_x;
+            float lidar1_trans_y;
+            float lidar1_rotat_w;
+            float lidar1_rotat_z;
+            float lidar2_trans_x;
+            float lidar2_trans_y;
+            float lidar2_rotat_w;
+            float lidar2_rotat_z;
+            sscanf(buf, extrinsic_slam_content.c_str(), &lidar1_trans_x, &lidar1_trans_y,
+                                    &lidar1_rotat_w, &lidar1_rotat_z,
+                                    &lidar2_trans_x, &lidar2_trans_y,
+                                    &lidar2_rotat_w, &lidar2_rotat_z);        //读出变量值
+            lidar1_trans_x = round(lidar1_x*1000000)/1000000;
+            lidar1_trans_y = round(lidar1_y*1000000)/1000000;
+            lidar1_rotat_w = round(cos(lidar1_theta/2)*1000000)/1000000;
+            lidar1_rotat_z = round(sin(lidar1_theta/2)*1000000)/1000000;
+            lidar2_trans_x = round(lidar2_x*1000000)/1000000;
+            lidar2_trans_y = round(lidar2_y*1000000)/1000000;
+            lidar2_rotat_w = round(cos(lidar2_theta/2)*1000000)/1000000;
+            lidar2_rotat_z = round(sin(lidar2_theta/2)*1000000)/1000000;
+
+            rewind(fp_read_extrinsic_slam);
+            fclose(fp_read_extrinsic_slam);
+            sprintf(buf, extrinsic_slam_content.c_str(), lidar1_trans_x, lidar1_trans_y,
+                                    lidar1_rotat_w, lidar1_rotat_z,
+                                    lidar2_trans_x, lidar2_trans_y,
+                                    lidar2_rotat_w, lidar2_rotat_z);        //保存变量
+            int i = 0;
+            while(buf[i]!='\0'){
+                i++;
+            }
+            FILE  * pf_write_extrinsic_slam = fopen((getenv("HOME")+path_calibFile_extrinsic_slam).c_str(), "w");      //打开
+            fwrite(buf, 1, i, pf_write_extrinsic_slam);                                            //写入文件
+            fclose(pf_write_extrinsic_slam);
+
+            // 填写slam内参数
+            char readBuffer1[65536];
+            rapidjson::FileReadStream is1(fp_read_intrinsic_slam, readBuffer1, sizeof(readBuffer1));
+            rapidjson::Document doc1;
+            doc1.ParseStream(is1);
+            fclose(fp_read_intrinsic_slam);
+
+            rapidjson::Value& value_increment1 = doc1["scan_1"]["angle_increment"];
+            rapidjson::Value& value_increment2 = doc1["scan_2"]["angle_increment"];
+
+            value_increment1.SetDouble(draw_increment1);
+            value_increment2.SetDouble(draw_increment2);
+
+            rapidjson::Value& value_installway1 = doc1["scan_1"]["mount_type"];
+            rapidjson::Value& value_installway2 = doc1["scan_2"]["mount_type"];
+
+            if (lidar_installWay == "up")
+            {
+                value_installway1.SetString("up");
+                value_installway2.SetString("up");
+            }
+            else
+            {
+                value_installway1.SetString("down");
+                value_installway2.SetString("down");
+            }
+
+            FILE* fp_write_intrinsic_slam = fopen((getenv("HOME")+path_calibFile_intrinsic_slam).c_str(), "w");
+            // 创建rapidjson的writer
+            char writebuffer1[65536];
+            rapidjson::FileWriteStream os1(fp_write_intrinsic_slam, writebuffer1, sizeof(writebuffer1));
+            rapidjson::PrettyWriter<rapidjson::FileWriteStream> writer1(os1);
+            // 将doc的更改写进json文件
+            doc1.Accept(writer1);
+            // 关闭json文件
+            fclose(fp_write_intrinsic_slam);
 
             command_row++;
             command_record->insertPlainText(tr("外参文件已输出\n"));
