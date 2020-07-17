@@ -85,6 +85,7 @@ InputDataWindow::InputDataWindow(QWidget *parent):QWidget(parent)
     connect(inputData_lidar1 , SIGNAL(clicked()) , this , SLOT(InputDataLidar1()) );
     connect(inputData_lidar2 , SIGNAL(clicked()) , this , SLOT(InputDataLidar2()) );
     connect(initial_extrinsic , SIGNAL(clicked()), this , SLOT(InitialExtrinsic()) );
+    connect(initial_extrinsic , SIGNAL(clicked()), this , SLOT(slotCurrentIndexChanged(int)) );
     connect(draw_data, SIGNAL(clicked()) , this , SLOT(DrawDataByButton()) );
     connect(clear_data, SIGNAL(clicked()) , this , SLOT(ClearData()) );
     connect(write_calibfile, SIGNAL(clicked()) , this , SLOT(WriteCalibFile()) );
@@ -141,8 +142,8 @@ void InputDataWindow::InputDataLidar1()
     }
     // 在线数据
     if (data_id == 0){
-        range1.clear();
-        SendData_lidar1(true, range1);
+        range2.clear();
+        SendData_lidar2(true, range1);
 
         tmr1->start(10);
         emit SendStatus_lidar1(true);
@@ -189,7 +190,7 @@ void InputDataWindow::InputDataLidar2(){
     }
     // 在线数据
     if (data_id == 0){
-        range2.clear();
+        range1.clear();
         SendData_lidar2(true, range2);
 
         tmr2->start(10);
@@ -554,7 +555,6 @@ void OperationWindow::DrawData(std::string way){
         command_record->moveCursor(QTextCursor::NextRow);
     }
 
-
     int draw_id = lidar_show->checkedId();
     double draw_increment1 = this->lidar1_increment_now->text().toDouble();
     double draw_increment2 = this->lidar2_increment_now->text().toDouble();
@@ -586,6 +586,8 @@ void OperationWindow::InitialExtrinsic(){
     dx_now->setText("0.01");
     dy_now->setText("0.01");
     dtheta_now->setText("0.1");
+
+    lidar_installWay = "down";
 }
 void OperationWindow::ReceiveStatus_carVersion(int version){
     car_version = version;
