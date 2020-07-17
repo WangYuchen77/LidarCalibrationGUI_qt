@@ -687,6 +687,17 @@ void OperationWindow::WriteCalibFile(){
             double lidar2_y = sin(lidar1_theta)*draw_x+cos(lidar1_theta)*draw_y+lidar1_y;
             double lidar2_theta = (360-45+draw_theta)/180*CV_PI;
 
+            // 外参标定补偿
+            double lidar2_x_truth = -car_length/2;
+            double lidar2_y_truth = car_width/2;
+            double error_x = lidar2_x - lidar2_x_truth;
+            double error_y = lidar2_y - lidar2_y_truth;
+            lidar1_x = lidar1_x - (error_x/2);
+            lidar1_y = lidar1_y - (error_y/2);
+            lidar2_x = lidar2_x - (error_x/2);
+            lidar2_y = lidar2_y - (error_y/2);
+
+
             // 填写planner参数
             char readBuffer[65536];
             rapidjson::FileReadStream is(fp_read_extrinsic_planner, readBuffer, sizeof(readBuffer));

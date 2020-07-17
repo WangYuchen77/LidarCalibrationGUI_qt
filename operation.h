@@ -119,9 +119,9 @@ class OperationWindow: public QWidget{
 public:
     OperationWindow(QWidget *parent= 0);
 
-    std::string path_calibFile_extrinsic_planner = "/commander/tools/LidarCalibrationGUI_qt/file/params2_ex.json";
-    std::string path_calibFile_extrinsic_slam = "/commander/tools/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
-    std::string path_calibFile_intrinsic_slam = "/commander/tools/LidarCalibrationGUI_qt/file/sensor_intrinsic.json";
+    std::string path_calibFile_extrinsic_planner = "/Desktop/LidarCalibrationGUI_qt/file/params2_ex.json";
+    std::string path_calibFile_extrinsic_slam = "/Desktop/LidarCalibrationGUI_qt/file/sensor_extrinsic.lua";
+    std::string path_calibFile_intrinsic_slam = "/Desktop/LidarCalibrationGUI_qt/file/sensor_intrinsic.json";
 
 
     std::string extrinsic_slam_content = "SENSOR_EXTRINSIC = {\n"\
