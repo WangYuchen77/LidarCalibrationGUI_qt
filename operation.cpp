@@ -117,8 +117,13 @@ void InputDataWindow::InputDataLidar1()
     // 离线数据
     if (data_id == 1){
 
-        // 固定路径
-        std::ifstream myfile_1((getenv("HOME") +path_lidar1).c_str());
+        // 固定路径随时加载
+        QString path1 = QFileDialog::getOpenFileName(this,"open","../","TXT(*.txt)");
+        std::string file1 = path1.toStdString();
+        std::ifstream myfile_1(file1);
+        // 固定路径写死
+//        std::ifstream myfile_1((getenv("HOME") +path_lidar1).c_str());
+
         inputData_lidar1path_now->setEnabled(true);
         inputData_lidar1path_now->setText("lidar1.txt");
 
@@ -167,7 +172,11 @@ void InputDataWindow::InputDataLidar2(){
     data_offline->setEnabled(false);
     // 离线数据
     if (data_id == 1){     
-        std::ifstream myfile_2((getenv("HOME") +path_lidar2).c_str());
+        QString path2 = QFileDialog::getOpenFileName(this,"open","../","TXT(*.txt)");
+        std::string file2 = path2.toStdString();
+        std::ifstream myfile_2(file2);
+//        std::ifstream myfile_2((getenv("HOME") +path_lidar2).c_str());
+
         inputData_lidar2path_now->setEnabled(true);
         inputData_lidar2path_now->setText("lidar2.txt");
 
@@ -669,9 +678,9 @@ void OperationWindow::WriteCalibFile(){
         command_record->insertPlainText(tr("正在向配置文件写入参数...\n"));
         command_record->moveCursor(QTextCursor::NextRow);
 
-        FILE* fp_read_extrinsic_planner = fopen((getenv("HOME")+path_calibFile_extrinsic_planner).c_str(), "r");
-        FILE* fp_read_extrinsic_slam = fopen((getenv("HOME")+path_calibFile_extrinsic_slam).c_str(), "r");
-        FILE* fp_read_intrinsic_slam = fopen((getenv("HOME")+path_calibFile_intrinsic_slam).c_str(), "r");
+        FILE* fp_read_extrinsic_planner = fopen(path_calibFile_extrinsic_planner.c_str(), "r");
+        FILE* fp_read_extrinsic_slam = fopen(path_calibFile_extrinsic_slam.c_str(), "r");
+        FILE* fp_read_intrinsic_slam = fopen(path_calibFile_intrinsic_slam.c_str(), "r");
 
         if (fp_read_extrinsic_planner==NULL || fp_read_extrinsic_slam==NULL || fp_read_intrinsic_slam==NULL)
         {
@@ -697,7 +706,6 @@ void OperationWindow::WriteCalibFile(){
             lidar2_x = lidar2_x - (error_x/2);
             lidar2_y = lidar2_y - (error_y/2);
 
-
             // 填写planner参数
             char readBuffer[65536];
             rapidjson::FileReadStream is(fp_read_extrinsic_planner, readBuffer, sizeof(readBuffer));
@@ -716,9 +724,9 @@ void OperationWindow::WriteCalibFile(){
             value_theta_1.SetDouble(round(-lidar1_theta*1000000)/1000000);
             value_x_2.SetDouble(round(lidar2_x*1000000)/1000000);
             value_y_2.SetDouble(round(lidar2_y*1000000)/1000000);
-            value_theta_2.SetDouble(round((45+draw_theta)/180*CV_PI*1000000)/1000000);
+            value_theta_2.SetDouble(round(-lidar2_theta*1000000)/1000000);
 
-            FILE* fp_write_extrinsic_planner = fopen((getenv("HOME")+path_calibFile_extrinsic_planner).c_str(), "w");
+            FILE* fp_write_extrinsic_planner = fopen(path_calibFile_extrinsic_planner.c_str(), "w");
             // 创建rapidjson的writer
             char writebuffer[65536];
             rapidjson::FileWriteStream os(fp_write_extrinsic_planner, writebuffer, sizeof(writebuffer));
@@ -764,7 +772,7 @@ void OperationWindow::WriteCalibFile(){
             while(buf[i]!='\0'){
                 i++;
             }
-            FILE  * pf_write_extrinsic_slam = fopen((getenv("HOME")+path_calibFile_extrinsic_slam).c_str(), "w");      //打开
+            FILE  * pf_write_extrinsic_slam = fopen(path_calibFile_extrinsic_slam.c_str(), "w");      //打开
             fwrite(buf, 1, i, pf_write_extrinsic_slam);                                            //写入文件
             fclose(pf_write_extrinsic_slam);
 
@@ -795,7 +803,7 @@ void OperationWindow::WriteCalibFile(){
                 value_installway2.SetString("down");
             }
 
-            FILE* fp_write_intrinsic_slam = fopen((getenv("HOME")+path_calibFile_intrinsic_slam).c_str(), "w");
+            FILE* fp_write_intrinsic_slam = fopen(path_calibFile_intrinsic_slam.c_str(), "w");
             // 创建rapidjson的writer
             char writebuffer1[65536];
             rapidjson::FileWriteStream os1(fp_write_intrinsic_slam, writebuffer1, sizeof(writebuffer1));
